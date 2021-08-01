@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 
 use crate::error::Error;
+use crate::error::Result;
 use crate::graph::Edge;
 use crate::graph::EdgeIndex;
 use crate::graph::Graph;
@@ -13,7 +14,7 @@ use crate::graph::PetGraph;
 use crate::primitive;
 
 /// Generate codes corresponding the graph.
-pub fn generate(graph: &Graph) -> Result<(), Error> {
+pub fn generate(graph: &Graph) -> Result<()> {
     let g = &graph.g;
     let mut outputs = HashMap::new();
 
@@ -49,7 +50,7 @@ fn generate_wait_all(
     g: &PetGraph,
     node_i: NodeIndex,
     merge_messages: String,
-) -> Result<(), Error> {
+) -> Result<()> {
     let input_queue = expect_one_input_queue_for_aggregation_node(g, node_i)?;
     let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
     primitive::wait_all::generate(outputs, input_queue, merge_messages, output_queue)
@@ -60,7 +61,7 @@ fn generate_wait_any(
     g: &PetGraph,
     node_i: NodeIndex,
     merge_messages: String,
-) -> Result<(), Error> {
+) -> Result<()> {
     let input_queue = expect_one_input_queue_for_aggregation_node(g, node_i)?;
     let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
     primitive::wait_any::generate(outputs, input_queue, merge_messages, output_queue)
@@ -70,7 +71,7 @@ fn generate_fan_out(
     outputs: &mut HashMap<String, String>,
     g: &PetGraph,
     node_i: NodeIndex,
-) -> Result<(), Error> {
+) -> Result<()> {
     let Edge { queue: input_queue } = expect_one_incoming_edge(g, node_i)?;
 
     // find output queues
@@ -90,13 +91,13 @@ fn generate_user_handler(
     g: &PetGraph,
     node_i: NodeIndex,
     module: String,
-) -> Result<(), Error> {
+) -> Result<()> {
     let Edge { queue: input_queue } = expect_one_incoming_edge(g, node_i)?;
     let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
     primitive::user_handler::generate(outputs, input_queue.clone(), output_queue)
 }
 
-fn expect_one_incoming_edge(g: &PetGraph, node_i: NodeIndex) -> Result<&Edge, Error> {
+fn expect_one_incoming_edge(g: &PetGraph, node_i: NodeIndex) -> Result<&Edge> {
     let in_edges: Vec<_> = g.edges_directed(node_i, Direction::Incoming).collect();
     if in_edges.len() != 1 {
         Err(Error::IllFormedNode {
@@ -107,7 +108,7 @@ fn expect_one_incoming_edge(g: &PetGraph, node_i: NodeIndex) -> Result<&Edge, Er
     }
 }
 
-fn expect_optional_outgoing_edge(g: &PetGraph, i: NodeIndex) -> Result<Option<&Edge>, Error> {
+fn expect_optional_outgoing_edge(g: &PetGraph, i: NodeIndex) -> Result<Option<&Edge>> {
     let edges: Vec<_> = g.edges_directed(i, Direction::Outgoing).collect();
     if edges.len() == 0 {
         Ok(None)
@@ -120,10 +121,7 @@ fn expect_optional_outgoing_edge(g: &PetGraph, i: NodeIndex) -> Result<Option<&E
     }
 }
 
-fn expect_one_input_queue_for_aggregation_node(
-    g: &PetGraph,
-    node_i: NodeIndex,
-) -> Result<String, Error> {
+fn expect_one_input_queue_for_aggregation_node(g: &PetGraph, node_i: NodeIndex) -> Result<String> {
     let incoming_edges = g.edges_directed(node_i, Direction::Incoming);
     let mut queues = HashSet::new();
     for edge in incoming_edges {
