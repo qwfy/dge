@@ -21,6 +21,8 @@ pub fn generate(graph: &Graph) -> Result<()> {
     // TODO @incomplete: check the validity of the graph
     // - single start node
     // - no cycle
+    // - every node has exactly one input queue
+    // - every queue has exactly one consumer
     // - ?
 
     // generate code for each node
