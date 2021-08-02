@@ -8,8 +8,8 @@ use super::generate;
 
 pub(crate) type PetGraph = petgraph::Graph<Node, Edge>;
 
-use super::error::Error;
-use super::error::Result;
+use crate::Error;
+use crate::Result;
 
 /// A node represents the computation.
 ///

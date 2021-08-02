@@ -9,8 +9,8 @@ use serde::de::DeserializeOwned;
 use std::future::Future;
 use tokio_amqp::*;
 
-use super::error::Error;
-use super::error::Result;
+use crate::Error;
+use crate::Result;
 use constant::*;
 
 pub enum Responsibility {

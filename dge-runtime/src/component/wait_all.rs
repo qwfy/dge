@@ -8,10 +8,10 @@ use serde::Serialize;
 use serde_json;
 use std::fmt::Display;
 
-use super::error::Error;
-use super::error::Result;
-use super::lib_rmq_primitive;
-use super::lib_rmq_primitive::Responsibility;
+use crate::rmq_primitive;
+use crate::rmq_primitive::Responsibility;
+use crate::Error;
+use crate::Result;
 
 /// Status of merging multiple messages into one `MergedMsg`
 pub enum MergeStatus<MergedMsg> {

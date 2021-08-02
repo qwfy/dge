@@ -11,13 +11,13 @@ use serde::Serialize;
 use serde_json;
 use std::fmt::Display;
 
-use super::error::Error;
-use super::error::Result;
-use super::lib_rmq_primitive::constant::*;
-use super::lib_rmq_primitive::create_channel;
-use super::lib_rmq_primitive::unreliable_ack_or_reject;
-use super::lib_rmq_primitive::AckType;
-use super::lib_rmq_primitive::Responsibility;
+use super::rmq_primitive::constant::*;
+use super::rmq_primitive::create_channel;
+use super::rmq_primitive::unreliable_ack_or_reject;
+use super::rmq_primitive::AckType;
+use super::rmq_primitive::Responsibility;
+use crate::Error;
+use crate::Result;
 
 /// Read a message of type `InputMsg` from `input_queue`, and process it with `handler`.
 ///

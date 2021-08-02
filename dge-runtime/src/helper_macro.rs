@@ -7,10 +7,10 @@ macro_rules! maybe_send_to_next {
         use serde_json;
         use std::fmt::Display;
 
-        use crate::error::Error;
-        use crate::error::Result;
-        use crate::lib_rmq_primitive;
-        use crate::lib_rmq_primitive::Responsibility;
+        use crate::rmq_primitive;
+        use crate::rmq_primitive::Responsibility;
+        use crate::Error;
+        use crate::Result;
 
         match $queue {
             None => {
@@ -30,7 +30,7 @@ macro_rules! maybe_send_to_next {
                         Ok(Responsibility::Accept)
                     }
                     Ok(payload) => {
-                        lib_rmq_primitive::publish_delayed(Some($channel), &queue, payload).await?;
+                        rmq_primitive::publish_delayed(Some($channel), &queue, payload).await?;
                         Ok(Responsibility::Accept)
                     }
                 }

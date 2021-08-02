@@ -5,14 +5,14 @@ use std::collections::HashSet;
 use std::path::Path;
 use std::path::PathBuf;
 
-use crate::error::Error;
-use crate::error::Result;
 use crate::graph::Edge;
 use crate::graph::EdgeIndex;
 use crate::graph::Graph;
 use crate::graph::Node;
 use crate::graph::NodeIndex;
 use crate::graph::PetGraph;
+use crate::Error;
+use crate::Result;
 
 /// Generate codes corresponding the graph.
 pub(crate) fn generate<P: AsRef<Path>>(graph: Graph, dir: P) -> Result<()> {

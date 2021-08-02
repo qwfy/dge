@@ -8,10 +8,10 @@ use serde::Serialize;
 use serde_json;
 use std::fmt::Display;
 
-use super::error::Error;
-use super::error::Result;
-use super::lib_rmq_primitive;
-use super::lib_rmq_primitive::Responsibility;
+use crate::rmq_primitive;
+use crate::rmq_primitive::Responsibility;
+use crate::Error;
+use crate::Result;
 
 pub struct HandlerState<InputMsg, UserError, AcceptFailureResult> {
     accept_failure: fn(&InputMsg, UserError) -> AcceptFailureResult,
@@ -50,7 +50,7 @@ where
             // this is acceptable, albeit annoying
             for output_queue in output_queues {
                 // TODO @incomplete: do not publish delayed
-                lib_rmq_primitive::publish_delayed(
+                rmq_primitive::publish_delayed(
                     Some(channel.clone()),
                     &output_queue,
                     payload.clone(),
