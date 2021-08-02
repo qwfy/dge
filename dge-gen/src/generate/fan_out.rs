@@ -1,18 +1,9 @@
 use askama::Template;
-use futures::Future;
-use lapin::Channel;
-use log::{debug, info, warn};
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use serde_json;
-use serde_json::json;
-use std::collections::HashMap;
-use std::fmt::Display;
 
-use super::code_gen::gen_opt_string;
-use super::code_gen::gen_string;
-use super::code_gen::gen_u32;
-use super::code_gen::gen_vec_string;
+use super::rust::gen_opt_string;
+use super::rust::gen_string;
+use super::rust::gen_u32;
+use super::rust::gen_vec_string;
 use crate::error::Error;
 use crate::error::Result;
 

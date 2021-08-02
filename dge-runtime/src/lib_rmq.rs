@@ -1,16 +1,23 @@
+use futures::Future;
 use lapin::options::BasicQosOptions;
 use lapin::Channel;
-use log::{debug, info, warn};
+use lapin::Connection;
+use lapin::ConnectionProperties;
+use log::debug;
+use log::info;
+use log::warn;
 use serde::de::DeserializeOwned;
-use std::future::Future;
+use serde::Serialize;
+use serde_json;
+use std::fmt::Display;
 
-use crate::error::Error;
-use crate::error::Result;
-use crate::runtime::lib_rmq_primitive::constant::*;
-use crate::runtime::lib_rmq_primitive::create_channel;
-use crate::runtime::lib_rmq_primitive::unreliable_ack_or_reject;
-use crate::runtime::lib_rmq_primitive::AckType;
-use crate::runtime::lib_rmq_primitive::Responsibility;
+use super::error::Error;
+use super::error::Result;
+use super::lib_rmq_primitive::constant::*;
+use super::lib_rmq_primitive::create_channel;
+use super::lib_rmq_primitive::unreliable_ack_or_reject;
+use super::lib_rmq_primitive::AckType;
+use super::lib_rmq_primitive::Responsibility;
 
 /// Read a message of type `InputMsg` from `input_queue`, and process it with `handler`.
 ///

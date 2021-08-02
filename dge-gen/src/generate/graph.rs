@@ -1,5 +1,4 @@
 use log::{debug, info, warn};
-use petgraph::visit::IntoEdgesDirected;
 use petgraph::Direction;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -8,7 +7,6 @@ use std::path::PathBuf;
 
 use crate::error::Error;
 use crate::error::Result;
-use crate::generate;
 use crate::graph::Edge;
 use crate::graph::EdgeIndex;
 use crate::graph::Graph;
@@ -17,7 +15,7 @@ use crate::graph::NodeIndex;
 use crate::graph::PetGraph;
 
 /// Generate codes corresponding the graph.
-pub fn generate_code<P: AsRef<Path>>(graph: Graph, dir: P) -> Result<()> {
+pub(crate) fn generate<P: AsRef<Path>>(graph: Graph, dir: P) -> Result<()> {
     let g = &graph.g;
     let mut outputs = HashMap::new();
     let dir = dir.as_ref();
@@ -95,13 +93,13 @@ fn generate_wait_all(
 ) -> Result<String> {
     let input_queue = expect_one_input_queue_for_aggregation_node(g, node_i)?;
     let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
-    generate::wait_all::generate(input_queue, merge_messages, output_queue, accept_failure)
+    super::wait_all::generate(input_queue, merge_messages, output_queue, accept_failure)
 }
 
 fn generate_wait_any(g: &PetGraph, node_i: NodeIndex, merge_messages: String) -> Result<String> {
     let input_queue = expect_one_input_queue_for_aggregation_node(g, node_i)?;
     let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
-    generate::wait_any::generate(input_queue, merge_messages, output_queue)
+    super::wait_any::generate(input_queue, merge_messages, output_queue)
 }
 
 fn generate_fan_out(g: &PetGraph, node_i: NodeIndex, accept_failure: String) -> Result<String> {
@@ -116,7 +114,7 @@ fn generate_fan_out(g: &PetGraph, node_i: NodeIndex, accept_failure: String) -> 
         output_queues.push(output_queue)
     }
 
-    generate::fan_out::generate(input_queue.clone(), output_queues, accept_failure)
+    super::fan_out::generate(input_queue.clone(), output_queues, accept_failure)
 }
 
 fn generate_user_handler(
@@ -127,7 +125,7 @@ fn generate_user_handler(
 ) -> Result<String> {
     let Edge { queue: input_queue } = expect_one_incoming_edge(g, node_i)?;
     let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
-    generate::user_handler::generate(input_queue.clone(), output_queue, module, accept_failure)
+    super::user_handler::generate(input_queue.clone(), output_queue, module, accept_failure)
 }
 
 fn expect_one_incoming_edge(g: &PetGraph, node_i: NodeIndex) -> Result<&Edge> {

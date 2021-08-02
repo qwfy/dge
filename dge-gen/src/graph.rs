@@ -1,11 +1,15 @@
 use petgraph;
+use std::path::Path;
+
 pub use petgraph::graph::EdgeIndex;
 pub use petgraph::graph::NodeIndex;
-use uuid::Uuid;
 
-use crate::graph::Node::UserHandler;
+use super::generate;
 
 pub(crate) type PetGraph = petgraph::Graph<Node, Edge>;
+
+use super::error::Error;
+use super::error::Result;
 
 /// A node represents the computation.
 ///
@@ -35,7 +39,7 @@ pub(crate) enum Node {
 }
 
 impl Node {
-    pub fn name(&self) -> String {
+    pub(crate) fn name(&self) -> String {
         match self {
             Node::Start { name, .. } => name.clone(),
             Node::WaitAll { name, .. } => name.clone(),
@@ -93,7 +97,7 @@ impl Graph {
         queue: S,
         behaviour_module: S,
     ) -> NodeIndex {
-        let handler_node = UserHandler {
+        let handler_node = Node::UserHandler {
             name: name.into(),
             behaviour_module: behaviour_module.into(),
         };
@@ -173,5 +177,10 @@ impl Graph {
         );
 
         fan_out_i
+    }
+
+    /// Generate code represented by the graph, write the code generated to `output_dir`.
+    pub fn generate<P: AsRef<Path>>(self, output_dir: P) -> Result<()> {
+        generate::graph::generate(self, output_dir)
     }
 }

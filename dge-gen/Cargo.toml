@@ -1,0 +1,11 @@
+[package]
+name = "dge-gen"
+version = "0.1.0"
+authors = ["Incomplete <incomplete@aixon.co>"]
+edition = "2018"
+
+[dependencies]
+askama = "0.8"
+petgraph = "0.6.0"
+log = "0.4"
+thiserror = "1.0.24"

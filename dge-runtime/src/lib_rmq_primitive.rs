@@ -1,15 +1,16 @@
 use lapin::options::BasicQosOptions;
-use lapin::{Channel, Connection, ConnectionProperties};
-use log::{debug, info, warn};
+use lapin::Channel;
+use lapin::Connection;
+use lapin::ConnectionProperties;
+use log::debug;
+use log::info;
+use log::warn;
 use serde::de::DeserializeOwned;
-use sqlx;
-use sqlx::postgres::PgRow;
 use std::future::Future;
 use tokio_amqp::*;
-use uuid::Uuid;
 
-use crate::error::Error;
-use crate::error::Result;
+use super::error::Error;
+use super::error::Result;
 use constant::*;
 
 pub enum Responsibility {

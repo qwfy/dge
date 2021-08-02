@@ -1,6 +1,6 @@
 // Auto-generated, all edits will be lost on the next generation.
 
-use dge;
+use dge_runtime;
 
 // Rustfmt is disabled.
 // This is to keep the style of generated content consistent between multiple generation runs,
@@ -9,7 +9,7 @@ use dge;
 #[rustfmt::skip]
 #[tokio::main(worker_threads = 2)]
 pub async fn main() {
-    let handler_state = dge::fan_out::HandlerState {
+    let handler_state = dge_runtime::fan_out::HandlerState {
         accept_failure: {{ accept_failure }},
         output_queues: {{ output_queues }},
     };

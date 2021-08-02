@@ -1,16 +1,17 @@
 use futures::Future;
 use lapin::Channel;
-use log::{debug, info, warn};
+use log::debug;
+use log::info;
+use log::warn;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json;
-use std::collections::HashMap;
 use std::fmt::Display;
 
-use crate::error::Error;
-use crate::error::Result;
-use crate::runtime::lib_rmq_primitive;
-use crate::runtime::lib_rmq_primitive::Responsibility;
+use super::error::Error;
+use super::error::Result;
+use super::lib_rmq_primitive;
+use super::lib_rmq_primitive::Responsibility;
 
 /// Status of merging multiple messages into one `MergedMsg`
 pub enum MergeStatus<MergedMsg> {

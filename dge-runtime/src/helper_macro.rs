@@ -1,14 +1,16 @@
 macro_rules! maybe_send_to_next {
     ($msg:expr, $queue:expr, $channel:expr, $accept_failure_msg:expr, $accept_failure:ident) => {{
-        use log::{debug, info, warn};
+        use log::debug;
+        use log::info;
+        use log::warn;
         use serde::Serialize;
         use serde_json;
         use std::fmt::Display;
 
         use crate::error::Error;
         use crate::error::Result;
-        use crate::runtime::lib_rmq_primitive;
-        use crate::runtime::lib_rmq_primitive::Responsibility;
+        use crate::lib_rmq_primitive;
+        use crate::lib_rmq_primitive::Responsibility;
 
         match $queue {
             None => {
