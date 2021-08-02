@@ -44,9 +44,13 @@ pub fn generate_code(graph: &Graph) -> Result<()> {
             Node::FanOut => {
                 generate_fan_out(&mut outputs, g, node_i, graph.accept_failure.clone())?
             }
-            Node::UserHandler { module } => {
-                generate_user_handler(&mut outputs, g, node_i, module.into())?
-            }
+            Node::UserHandler { behaviour_module } => generate_user_handler(
+                &mut outputs,
+                g,
+                node_i,
+                behaviour_module.into(),
+                graph.accept_failure.clone(),
+            )?,
         }
     }
 
@@ -107,10 +111,17 @@ fn generate_user_handler(
     g: &PetGraph,
     node_i: NodeIndex,
     module: String,
+    accept_failure: String,
 ) -> Result<()> {
     let Edge { queue: input_queue } = expect_one_incoming_edge(g, node_i)?;
     let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
-    generate::user_handler::generate(outputs, input_queue.clone(), output_queue)
+    generate::user_handler::generate(
+        outputs,
+        input_queue.clone(),
+        output_queue,
+        module,
+        accept_failure,
+    )
 }
 
 fn expect_one_incoming_edge(g: &PetGraph, node_i: NodeIndex) -> Result<&Edge> {

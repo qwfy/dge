@@ -19,7 +19,7 @@ pub(crate) enum Node {
     /// Duplicate the output of one node to multiple nodes.
     FanOut,
     /// A user-provided handler that transform the input message into the output message.
-    UserHandler { module: String },
+    UserHandler { behaviour_module: String },
 }
 
 /// An edge represents a RabbitMQ queue.
@@ -74,8 +74,13 @@ impl Graph {
     ///
     /// Internally this will create a new node for `handler`,
     /// and a new edge from `input` to `handler` representing the underlying RabbitMQ queue `queue`.
-    pub fn process(&mut self, input: NodeIndex, queue: String, handler: String) -> NodeIndex {
-        let handler_node = UserHandler { module: handler };
+    pub fn process(
+        &mut self,
+        input: NodeIndex,
+        queue: String,
+        behaviour_module: String,
+    ) -> NodeIndex {
+        let handler_node = UserHandler { behaviour_module };
         let handler_node_i = self.g.add_node(handler_node);
         let edge = Edge { queue };
         self.g.add_edge(input, handler_node_i, edge);

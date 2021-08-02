@@ -1,6 +1,8 @@
 use futures::Future;
 use lapin::Channel;
 use log::{debug, info, warn};
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 use serde_json;
 use std::collections::HashMap;
 use std::fmt::Display;
@@ -9,8 +11,6 @@ use crate::error::Error;
 use crate::error::Result;
 use crate::runtime::lib_rmq_primitive;
 use crate::runtime::lib_rmq_primitive::Responsibility;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 
 /// Status of merging multiple messages into one `MergedMsg`
 pub enum MergeStatus<MergedMsg> {
@@ -64,32 +64,7 @@ where
             Ok(Responsibility::Accept)
         }
         Ok(MergeStatus::FreshMerge(merged_msg)) => {
-            match output_queue {
-                None => {
-                    // no further processing needed, just accept it
-                    Ok(Responsibility::Accept)
-                }
-                Some(queue) => {
-                    // serialize it and send it to the output queue
-                    match serde_json::to_vec(&merged_msg) {
-                        Err(serde_error) => {
-                            // serialization error is final
-                            let () =
-                                accept_failure(&msg, serde_error.into())
-                                    .await
-                                    .map_err(|ue| Error::UserError {
-                                        error: ue.to_string(),
-                                    })?;
-                            Ok(Responsibility::Accept)
-                        }
-                        Ok(payload) => {
-                            lib_rmq_primitive::publish_delayed(Some(channel), &queue, payload)
-                                .await?;
-                            Ok(Responsibility::Accept)
-                        }
-                    }
-                }
-            }
+            maybe_send_to_next!(&merged_msg, output_queue, channel, &msg, accept_failure)
         }
     }
 }

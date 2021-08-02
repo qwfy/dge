@@ -8,5 +8,4 @@ pub use error::Error;
 pub use error::Result;
 pub use evaluate::generate_code;
 pub use graph::Graph;
-pub use runtime::wait_all;
 pub use runtime::wait_all::MergeStatus;
