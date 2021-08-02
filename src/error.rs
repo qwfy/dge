@@ -18,4 +18,8 @@ pub enum Error {
 
     #[error(transparent)]
     RabbitMQError(#[from] lapin::Error),
+
+    // errors returned by user functions
+    #[error("User error: {}", .error)]
+    UserError { error: String },
 }
