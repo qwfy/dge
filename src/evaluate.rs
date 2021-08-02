@@ -1,7 +1,10 @@
+use log::{debug, info, warn};
 use petgraph::visit::IntoEdgesDirected;
 use petgraph::Direction;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::path::Path;
+use std::path::PathBuf;
 
 use crate::error::Error;
 use crate::error::Result;
@@ -14,12 +17,12 @@ use crate::graph::NodeIndex;
 use crate::graph::PetGraph;
 
 /// Generate codes corresponding the graph.
-pub fn generate_code(graph: &Graph) -> Result<()> {
+pub fn generate_code<P: AsRef<Path>>(graph: &Graph, dir: P) -> Result<()> {
     let g = &graph.g;
     let mut outputs = HashMap::new();
+    let dir = dir.as_ref();
 
     // TODO @incomplete: check the validity of the graph
-    // - single start node
     // - no cycle
     // - every node has exactly one input queue
     // - every queue has exactly one consumer
@@ -30,68 +33,71 @@ pub fn generate_code(graph: &Graph) -> Result<()> {
         let node = &g[node_i];
         match node {
             // start node doesn't need any code
-            Node::Start => (),
-            Node::WaitAll { merge_messages } => generate_wait_all(
-                &mut outputs,
-                g,
-                node_i,
-                merge_messages.into(),
-                graph.accept_failure.clone(),
-            )?,
-            Node::WaitAny { merge_messages } => {
-                generate_wait_any(&mut outputs, g, node_i, merge_messages.into())?
+            Node::Start { .. } => (),
+            Node::WaitAll {
+                name,
+                merge_messages,
+            } => {
+                let content = generate_wait_all(
+                    g,
+                    node_i,
+                    merge_messages.into(),
+                    graph.accept_failure.clone(),
+                )?;
+                update_outputs(&mut outputs, dir, name, content);
             }
-            Node::FanOut => {
-                generate_fan_out(&mut outputs, g, node_i, graph.accept_failure.clone())?
+            Node::WaitAny {
+                name,
+                merge_messages,
+            } => {
+                let content = generate_wait_any(g, node_i, merge_messages.into())?;
+                update_outputs(&mut outputs, dir, name, content);
             }
-            Node::UserHandler { behaviour_module } => generate_user_handler(
-                &mut outputs,
-                g,
-                node_i,
-                behaviour_module.into(),
-                graph.accept_failure.clone(),
-            )?,
+            Node::FanOut { name } => {
+                let content = generate_fan_out(g, node_i, graph.accept_failure.clone())?;
+                update_outputs(&mut outputs, dir, name, content);
+            }
+            Node::UserHandler {
+                name,
+                behaviour_module,
+            } => {
+                let content = generate_user_handler(
+                    g,
+                    node_i,
+                    behaviour_module.into(),
+                    graph.accept_failure.clone(),
+                )?;
+                update_outputs(&mut outputs, dir, name, content);
+            }
         }
+    }
+
+    for (file_path, content) in outputs {
+        info!("writing to {}", &file_path.display());
+        std::fs::write(file_path, content)?
     }
 
     Ok(())
 }
 
 fn generate_wait_all(
-    outputs: &mut HashMap<String, String>,
     g: &PetGraph,
     node_i: NodeIndex,
     merge_messages: String,
     accept_failure: String,
-) -> Result<()> {
+) -> Result<String> {
     let input_queue = expect_one_input_queue_for_aggregation_node(g, node_i)?;
     let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
-    generate::wait_all::generate(
-        outputs,
-        input_queue,
-        merge_messages,
-        output_queue,
-        accept_failure,
-    )
+    generate::wait_all::generate(input_queue, merge_messages, output_queue, accept_failure)
 }
 
-fn generate_wait_any(
-    outputs: &mut HashMap<String, String>,
-    g: &PetGraph,
-    node_i: NodeIndex,
-    merge_messages: String,
-) -> Result<()> {
+fn generate_wait_any(g: &PetGraph, node_i: NodeIndex, merge_messages: String) -> Result<String> {
     let input_queue = expect_one_input_queue_for_aggregation_node(g, node_i)?;
     let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
-    generate::wait_any::generate(outputs, input_queue, merge_messages, output_queue)
+    generate::wait_any::generate(input_queue, merge_messages, output_queue)
 }
 
-fn generate_fan_out(
-    outputs: &mut HashMap<String, String>,
-    g: &PetGraph,
-    node_i: NodeIndex,
-    accept_failure: String,
-) -> Result<()> {
+fn generate_fan_out(g: &PetGraph, node_i: NodeIndex, accept_failure: String) -> Result<String> {
     let Edge { queue: input_queue } = expect_one_incoming_edge(g, node_i)?;
 
     // find output queues
@@ -103,25 +109,18 @@ fn generate_fan_out(
         output_queues.push(output_queue)
     }
 
-    generate::fan_out::generate(outputs, input_queue.clone(), output_queues, accept_failure)
+    generate::fan_out::generate(input_queue.clone(), output_queues, accept_failure)
 }
 
 fn generate_user_handler(
-    outputs: &mut HashMap<String, String>,
     g: &PetGraph,
     node_i: NodeIndex,
     module: String,
     accept_failure: String,
-) -> Result<()> {
+) -> Result<String> {
     let Edge { queue: input_queue } = expect_one_incoming_edge(g, node_i)?;
     let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
-    generate::user_handler::generate(
-        outputs,
-        input_queue.clone(),
-        output_queue,
-        module,
-        accept_failure,
-    )
+    generate::user_handler::generate(input_queue.clone(), output_queue, module, accept_failure)
 }
 
 fn expect_one_incoming_edge(g: &PetGraph, node_i: NodeIndex) -> Result<&Edge> {
@@ -163,4 +162,16 @@ fn expect_one_input_queue_for_aggregation_node(g: &PetGraph, node_i: NodeIndex) 
             node: format!("{:?}", g[node_i]),
         })
     }
+}
+
+fn update_outputs<P: AsRef<Path>, S: AsRef<str>>(
+    outputs: &mut HashMap<PathBuf, String>,
+    dir: P,
+    name: S,
+    content: String,
+) {
+    let dir = dir.as_ref();
+    let basename = format!("{}.rs", name.as_ref());
+    let file_path = dir.join(basename);
+    outputs.insert(file_path, content);
 }

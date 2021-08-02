@@ -8,36 +8,36 @@ use crate::graph::Node::UserHandler;
 pub(crate) type PetGraph = petgraph::Graph<Node, Edge>;
 
 /// A node represents the computation.
+///
+/// Every node has an unique name associated with it,
+/// which will be used as the file name of the generated file.
 #[derive(Clone, Debug)]
 pub(crate) enum Node {
     /// A no-op node that indicates the start of the computation.
-    Start,
+    Start { name: String },
     /// Wait for all incoming edges, merge the incoming messages for later consumption.
-    WaitAll { merge_messages: String },
+    WaitAll {
+        name: String,
+        merge_messages: String,
+    },
     /// Wait for any incoming edges, merge the incoming messages for later consumption.
-    WaitAny { merge_messages: String },
+    WaitAny {
+        name: String,
+        merge_messages: String,
+    },
     /// Duplicate the output of one node to multiple nodes.
-    FanOut,
+    FanOut { name: String },
     /// A user-provided handler that transform the input message into the output message.
-    UserHandler { behaviour_module: String },
+    UserHandler {
+        name: String,
+        behaviour_module: String,
+    },
 }
 
 /// An edge represents a RabbitMQ queue.
 #[derive(Clone, Debug)]
 pub(crate) struct Edge {
     pub(crate) queue: String,
-}
-
-impl Node {
-    pub(crate) fn is_start(&self) -> bool {
-        match self {
-            Node::Start { .. } => true,
-            Node::WaitAll { .. } => false,
-            Node::WaitAny { .. } => false,
-            Node::FanOut => false,
-            Node::UserHandler { .. } => false,
-        }
-    }
 }
 
 /// A computational graph where:
@@ -63,8 +63,8 @@ impl Graph {
     /// for later operations after the graph is created.
     ///
     /// Return a handle to the start node.
-    pub fn start(&mut self) -> NodeIndex {
-        self.g.add_node(Node::Start)
+    pub fn start<S: Into<String>>(&mut self, name: S) -> NodeIndex {
+        self.g.add_node(Node::Start { name: name.into() })
     }
 
     /// Reads the output of the `input` node from the RabbitMQ queue `queue`
@@ -74,15 +74,21 @@ impl Graph {
     ///
     /// Internally this will create a new node for `handler`,
     /// and a new edge from `input` to `handler` representing the underlying RabbitMQ queue `queue`.
-    pub fn process(
+    pub fn process<S: Into<String>>(
         &mut self,
+        name: S,
         input: NodeIndex,
-        queue: String,
-        behaviour_module: String,
+        queue: S,
+        behaviour_module: S,
     ) -> NodeIndex {
-        let handler_node = UserHandler { behaviour_module };
+        let handler_node = UserHandler {
+            name: name.into(),
+            behaviour_module: behaviour_module.into(),
+        };
         let handler_node_i = self.g.add_node(handler_node);
-        let edge = Edge { queue };
+        let edge = Edge {
+            queue: queue.into(),
+        };
         self.g.add_edge(input, handler_node_i, edge);
         handler_node_i
     }
@@ -91,13 +97,18 @@ impl Graph {
     /// and merge them for later consumption.
     ///
     /// Return a handle to the newly added node.
-    pub fn wait_all(
+    pub fn wait_all<S: Into<String>>(
         &mut self,
+        name: S,
         inputs: Vec<NodeIndex>,
-        queue: String,
-        merge_messages: String,
+        queue: S,
+        merge_messages: S,
     ) -> NodeIndex {
-        let wait_node_i = self.g.add_node(Node::WaitAll { merge_messages });
+        let wait_node_i = self.g.add_node(Node::WaitAll {
+            name: name.into(),
+            merge_messages: merge_messages.into(),
+        });
+        let queue = queue.into();
         for input_i in inputs {
             self.g.add_edge(
                 input_i,
@@ -111,13 +122,18 @@ impl Graph {
     }
 
     /// Like [`wait_all`], but wait at least one messages instead of all of them.
-    pub fn wait_any(
+    pub fn wait_any<S: Into<String>>(
         &mut self,
+        name: S,
         inputs: Vec<NodeIndex>,
-        queue: String,
-        merge_messages: String,
+        queue: S,
+        merge_messages: S,
     ) -> NodeIndex {
-        let wait_any_i = self.g.add_node(Node::WaitAny { merge_messages });
+        let wait_any_i = self.g.add_node(Node::WaitAny {
+            name: name.into(),
+            merge_messages: merge_messages.into(),
+        });
+        let queue = queue.into();
         for input_i in inputs {
             self.g.add_edge(
                 input_i,
@@ -134,9 +150,15 @@ impl Graph {
     /// to all outgoing edges of the newly created node.
     ///
     /// Return a handle to the newly created node
-    pub fn fan_out(&mut self, input: NodeIndex, queue: String) -> NodeIndex {
-        let fan_out_i = self.g.add_node(Node::FanOut);
-        self.g.add_edge(input, fan_out_i, Edge { queue });
+    pub fn fan_out<S: Into<String>>(&mut self, name: S, input: NodeIndex, queue: S) -> NodeIndex {
+        let fan_out_i = self.g.add_node(Node::FanOut { name: name.into() });
+        self.g.add_edge(
+            input,
+            fan_out_i,
+            Edge {
+                queue: queue.into(),
+            },
+        );
 
         fan_out_i
     }

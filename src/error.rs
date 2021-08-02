@@ -16,6 +16,9 @@ pub enum Error {
     #[error(transparent)]
     AskamaError(#[from] askama::Error),
 
+    #[error(transparent)]
+    IoError(#[from] std::io::Error),
+
     // runtime errors
     #[error("Failed to publish to {}, error: {}", .queue, .error)]
     FailedToPublishRmqMsg { queue: String, error: String },

@@ -26,11 +26,10 @@ struct FanOutTemplate {
 }
 
 pub(crate) fn generate(
-    outputs: &mut HashMap<String, String>,
     input_queue: String,
     output_queues: Vec<String>,
     accept_failure: String,
-) -> Result<()> {
+) -> Result<String> {
     let template = FanOutTemplate {
         accept_failure: gen_string(accept_failure),
         output_queues: gen_vec_string(output_queues),
@@ -41,7 +40,5 @@ pub(crate) fn generate(
 
     let generated = template.render()?;
 
-    println!("{}", generated);
-
-    Ok(())
+    Ok(generated)
 }

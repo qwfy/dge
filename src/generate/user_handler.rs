@@ -27,12 +27,11 @@ struct UserHandlerTemplate {
 }
 
 pub(crate) fn generate(
-    outputs: &mut HashMap<String, String>,
     input_queue: String,
     output_queue: Option<String>,
     behaviour_module: String,
     accept_failure: String,
-) -> Result<()> {
+) -> Result<String> {
     let template = UserHandlerTemplate {
         accept_failure: gen_string(accept_failure),
         output_queue: gen_opt_string(output_queue),
@@ -45,7 +44,5 @@ pub(crate) fn generate(
 
     let generated = template.render()?;
 
-    println!("{}", generated);
-
-    Ok(())
+    Ok(generated)
 }

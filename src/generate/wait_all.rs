@@ -26,12 +26,11 @@ struct WaitAllTemplate {
 }
 
 pub(crate) fn generate(
-    outputs: &mut HashMap<String, String>,
     input_queue: String,
     merge_messages: String,
     output_queue: Option<String>,
     accept_failure: String,
-) -> Result<()> {
+) -> Result<String> {
     let template = WaitAllTemplate {
         merge_messages: gen_string(merge_messages),
         accept_failure: gen_string(accept_failure),
@@ -43,7 +42,5 @@ pub(crate) fn generate(
 
     let generated = template.render()?;
 
-    println!("{}", generated);
-
-    Ok(())
+    Ok(generated)
 }
