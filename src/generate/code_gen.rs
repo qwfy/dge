@@ -9,6 +9,11 @@ pub(crate) fn gen_opt_string(s: Option<String>) -> String {
     }
 }
 
+pub(crate) fn gen_vec_string(ss: Vec<String>) -> String {
+    let middle: String = ss.into_iter().map(gen_string).collect::<Vec<_>>().join(",");
+    format!(r#"vec![{}]"#, middle)
+}
+
 pub(crate) fn gen_u32(n: u32) -> String {
     n.to_string()
 }

@@ -41,7 +41,9 @@ pub fn generate_code(graph: &Graph) -> Result<()> {
             Node::WaitAny { merge_messages } => {
                 generate_wait_any(&mut outputs, g, node_i, merge_messages.into())?
             }
-            Node::FanOut => generate_fan_out(&mut outputs, g, node_i)?,
+            Node::FanOut => {
+                generate_fan_out(&mut outputs, g, node_i, graph.accept_failure.clone())?
+            }
             Node::UserHandler { module } => {
                 generate_user_handler(&mut outputs, g, node_i, module.into())?
             }
@@ -84,6 +86,7 @@ fn generate_fan_out(
     outputs: &mut HashMap<String, String>,
     g: &PetGraph,
     node_i: NodeIndex,
+    accept_failure: String,
 ) -> Result<()> {
     let Edge { queue: input_queue } = expect_one_incoming_edge(g, node_i)?;
 
@@ -96,7 +99,7 @@ fn generate_fan_out(
         output_queues.push(output_queue)
     }
 
-    generate::fan_out::generate(outputs, input_queue.clone(), output_queues)
+    generate::fan_out::generate(outputs, input_queue.clone(), output_queues, accept_failure)
 }
 
 fn generate_user_handler(
