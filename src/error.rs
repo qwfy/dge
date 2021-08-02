@@ -1,3 +1,4 @@
+use askama;
 use lapin;
 use thiserror;
 
@@ -11,6 +12,9 @@ pub enum Error {
     // graph related errors
     #[error("Node is ill formed: {}", .node)]
     IllFormedNode { node: String },
+
+    #[error(transparent)]
+    AskamaError(#[from] askama::Error),
 
     // runtime errors
     #[error("Failed to publish to {}, error: {}", .queue, .error)]

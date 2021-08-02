@@ -46,13 +46,15 @@ impl Node {
 /// - nodes represent computations that transform the input message into output message
 pub struct Graph {
     pub(crate) g: PetGraph,
+    pub(crate) accept_failure: String,
 }
 
 impl Graph {
     /// Create a new computational graph.
-    pub fn new() -> Graph {
+    pub fn new(accept_failure: String) -> Graph {
         Graph {
             g: petgraph::Graph::new(),
+            accept_failure,
         }
     }
 

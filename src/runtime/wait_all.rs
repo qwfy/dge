@@ -7,19 +7,10 @@ use std::fmt::Display;
 
 use crate::error::Error;
 use crate::error::Result;
-use crate::primitive::lib_rmq_primitive;
-use crate::primitive::lib_rmq_primitive::Responsibility;
+use crate::runtime::lib_rmq_primitive;
+use crate::runtime::lib_rmq_primitive::Responsibility;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-
-pub(crate) fn generate(
-    outputs: &mut HashMap<String, String>,
-    input_queue: String,
-    merge_messages: String,
-    output_queue: Option<String>,
-) -> Result<()> {
-    unimplemented!()
-}
 
 /// Status of merging multiple messages into one `MergedMsg`
 pub enum MergeStatus<MergedMsg> {
@@ -31,15 +22,16 @@ pub enum MergeStatus<MergedMsg> {
     AlreadyMerged,
 }
 
-type HandlerState = ();
-
-pub async fn wait_all<InputMsg, MergedMsg, UserError, MergeResult, AcceptFailureResult>(
-    state: HandlerState,
-    channel: Channel,
-    msg: InputMsg,
+pub struct HandlerState<InputMsg, MergeResult, UserError, AcceptFailureResult> {
     merge_messages: fn(&InputMsg) -> MergeResult,
     accept_failure: fn(&InputMsg, UserError) -> AcceptFailureResult,
     output_queue: Option<String>,
+}
+
+pub async fn wait_all<InputMsg, MergedMsg, UserError, MergeResult, AcceptFailureResult>(
+    state: HandlerState<InputMsg, MergeResult, UserError, AcceptFailureResult>,
+    channel: Channel,
+    msg: InputMsg,
 ) -> Result<Responsibility>
 where
     InputMsg: DeserializeOwned + Display + Send + 'static,
@@ -48,6 +40,9 @@ where
     MergeResult: Future<Output = std::result::Result<MergeStatus<MergedMsg>, UserError>>,
     AcceptFailureResult: Future<Output = std::result::Result<(), UserError>>,
 {
+    let merge_messages = state.merge_messages;
+    let accept_failure = state.accept_failure;
+    let output_queue = state.output_queue;
     match merge_messages(&msg).await {
         Err(user_error) => {
             // user handler returned error,

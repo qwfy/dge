@@ -6,11 +6,11 @@ use std::future::Future;
 
 use crate::error::Error;
 use crate::error::Result;
-use crate::primitive::lib_rmq_primitive::constant::*;
-use crate::primitive::lib_rmq_primitive::create_channel;
-use crate::primitive::lib_rmq_primitive::unreliable_ack_or_reject;
-use crate::primitive::lib_rmq_primitive::AckType;
-use crate::primitive::lib_rmq_primitive::Responsibility;
+use crate::runtime::lib_rmq_primitive::constant::*;
+use crate::runtime::lib_rmq_primitive::create_channel;
+use crate::runtime::lib_rmq_primitive::unreliable_ack_or_reject;
+use crate::runtime::lib_rmq_primitive::AckType;
+use crate::runtime::lib_rmq_primitive::Responsibility;
 
 /// Read a message of type `InputMsg` from `input_queue`, and process it with `handler`.
 ///
