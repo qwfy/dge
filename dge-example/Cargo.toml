@@ -1,0 +1,20 @@
+[package]
+name = "dge-example"
+version = "0.1.0"
+authors = ["Incomplete <incomplete@aixon.co>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dge-gen = { path = "../dge-gen", version = "0.1.0" }
+dge-runtime = { path = "../dge-runtime", version = "0.1.0" }
+tokio = { version = "1.5", features = ["full"] }
+
+[[bin]]
+name = "generate_code"
+path = "src/main_generate_code.rs"
+
+[[bin]]
+name = "use_generated"
+path = "src/main_use_generated.rs"

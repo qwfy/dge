@@ -1,5 +1,6 @@
 use askama::Template;
 
+use super::rust::gen_ident;
 use super::rust::gen_opt_string;
 use super::rust::gen_string;
 use super::rust::gen_u32;
@@ -22,7 +23,7 @@ pub(crate) fn generate(
     accept_failure: String,
 ) -> Result<String> {
     let template = FanOutTemplate {
-        accept_failure: gen_string(accept_failure),
+        accept_failure: gen_ident(accept_failure),
         output_queues: gen_vec_string(output_queues),
         input_queue: gen_string(input_queue),
         // TODO @incomplete: make it configurable

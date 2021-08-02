@@ -17,3 +17,7 @@ pub(crate) fn gen_vec_string(ss: Vec<String>) -> String {
 pub(crate) fn gen_u32(n: u32) -> String {
     n.to_string()
 }
+
+pub(crate) fn gen_ident(s: String) -> String {
+    s
+}

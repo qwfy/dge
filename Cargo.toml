@@ -3,4 +3,5 @@
 members = [
     "dge-gen",
     "dge-runtime",
+    "dge-example",
 ]

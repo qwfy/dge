@@ -273,6 +273,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "dge-example"
+version = "0.1.0"
+dependencies = [
+ "dge-gen",
+ "dge-runtime",
+ "tokio",
+]
+
+[[package]]
 name = "dge-gen"
 version = "0.1.0"
 dependencies = [

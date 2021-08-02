@@ -8,7 +8,7 @@ pub(crate) async fn main() {
         user_handler_state: {{ user_handler_state }},
         
     };
-    let () = dge_runtime::rmq::consumer_forever(
+    let () = dge_runtime::rmq::consume_forever(
         {{ input_queue }},
         dge_runtime::component::user_handler::user_handler,
         handler_state,

@@ -1,5 +1,6 @@
 use askama::Template;
 
+use super::rust::gen_ident;
 use super::rust::gen_opt_string;
 use super::rust::gen_string;
 use super::rust::gen_u32;
@@ -25,13 +26,13 @@ pub(crate) fn generate(
     accept_failure: String,
 ) -> Result<String> {
     let template = UserHandlerTemplate {
-        accept_failure: gen_string(accept_failure),
+        accept_failure: gen_ident(accept_failure),
         output_queue: gen_opt_string(output_queue),
         input_queue: gen_string(input_queue),
         // TODO @incomplete: make it configurable
         prefetch_count: gen_u32(1),
-        user_handler: format!(r#"{}::handle"#, &behaviour_module),
-        user_handler_state: format!(r#"{}::init_state()"#, &behaviour_module),
+        user_handler: gen_ident(format!(r#"{}::handle"#, &behaviour_module)),
+        user_handler_state: gen_ident(format!(r#"{}::init_state()"#, &behaviour_module)),
     };
 
     let generated = template.render()?;
