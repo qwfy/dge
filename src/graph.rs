@@ -34,6 +34,18 @@ pub(crate) enum Node {
     },
 }
 
+impl Node {
+    pub fn name(&self) -> String {
+        match self {
+            Node::Start { name, .. } => name.clone(),
+            Node::WaitAll { name, .. } => name.clone(),
+            Node::WaitAny { name, .. } => name.clone(),
+            Node::FanOut { name, .. } => name.clone(),
+            Node::UserHandler { name, .. } => name.clone(),
+        }
+    }
+}
+
 /// An edge represents a RabbitMQ queue.
 #[derive(Clone, Debug)]
 pub(crate) struct Edge {

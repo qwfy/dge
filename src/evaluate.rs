@@ -17,7 +17,7 @@ use crate::graph::NodeIndex;
 use crate::graph::PetGraph;
 
 /// Generate codes corresponding the graph.
-pub fn generate_code<P: AsRef<Path>>(graph: &Graph, dir: P) -> Result<()> {
+pub fn generate_code<P: AsRef<Path>>(graph: Graph, dir: P) -> Result<()> {
     let g = &graph.g;
     let mut outputs = HashMap::new();
     let dir = dir.as_ref();
@@ -71,6 +71,13 @@ pub fn generate_code<P: AsRef<Path>>(graph: &Graph, dir: P) -> Result<()> {
             }
         }
     }
+
+    // write the graph in dot format
+    let graph_for_display = map_to_string(g);
+    let dot = petgraph::dot::Dot::with_config(&graph_for_display, &[]);
+    let dot_file_path = dir.join("graph.dot");
+    info!("writing dot graph to {}", &dot_file_path.display());
+    std::fs::write(dot_file_path, format!("{}", dot))?;
 
     for (file_path, content) in outputs {
         info!("writing to {}", &file_path.display());
@@ -174,4 +181,11 @@ fn update_outputs<P: AsRef<Path>, S: AsRef<str>>(
     let basename = format!("{}.rs", name.as_ref());
     let file_path = dir.join(basename);
     outputs.insert(file_path, content);
+}
+
+fn map_to_string(old: &PetGraph) -> petgraph::Graph<String, String> {
+    old.map(
+        |node_index, node| node.name(),
+        |edge_index, edge| edge.queue.clone(),
+    )
 }
