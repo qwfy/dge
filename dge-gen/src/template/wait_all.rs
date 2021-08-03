@@ -1,6 +1,6 @@
-{% include "header_comment.rs" %}
+{% include "part_comment.rs" %}
 
-{% include "header_common_import.rs" %}
+{% include "part_common_import.rs" %}
 
 use dge_runtime::component::wait_all::MergeStatus;
 
