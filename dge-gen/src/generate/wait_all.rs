@@ -12,6 +12,8 @@ use crate::Result;
 #[derive(Template)]
 #[template(path = "wait_all.rs", escape = "none")]
 struct WaitAllTemplate {
+    type_input_msg: String,
+    type_error: String,
     merge_messages: String,
     accept_failure: String,
     output_queue: String,
@@ -24,6 +26,8 @@ pub(crate) fn generate(
     merge_messages: String,
     output_queue: Option<String>,
     accept_failure: String,
+    type_input_msg: String,
+    type_error: String,
 ) -> Result<String> {
     let template = WaitAllTemplate {
         merge_messages: gen_ident(merge_messages),
@@ -32,6 +36,8 @@ pub(crate) fn generate(
         input_queue: gen_str(input_queue),
         // TODO @incomplete: make it configurable
         prefetch_count: gen_u32(1),
+        type_input_msg: gen_ident(type_input_msg),
+        type_error: gen_ident(type_error),
     };
 
     let generated = template.render()?;

@@ -35,12 +35,15 @@ pub(crate) fn generate<P: AsRef<Path>>(graph: Graph, dir: P) -> Result<()> {
             Node::WaitAll {
                 name,
                 merge_messages,
+                type_input_msg,
             } => {
                 let content = generate_wait_all(
                     g,
                     node_i,
                     merge_messages.into(),
                     graph.accept_failure.clone(),
+                    type_input_msg.clone(),
+                    graph.type_error.clone(),
                 )?;
                 update_outputs(&mut outputs, dir, name, content);
             }
@@ -90,10 +93,19 @@ fn generate_wait_all(
     node_i: NodeIndex,
     merge_messages: String,
     accept_failure: String,
+    type_input_msg: String,
+    type_error: String,
 ) -> Result<String> {
     let input_queue = expect_one_input_queue_for_aggregation_node(g, node_i)?;
     let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
-    super::wait_all::generate(input_queue, merge_messages, output_queue, accept_failure)
+    super::wait_all::generate(
+        input_queue,
+        merge_messages,
+        output_queue,
+        accept_failure,
+        type_input_msg,
+        type_error,
+    )
 }
 
 fn generate_wait_any(g: &PetGraph, node_i: NodeIndex, merge_messages: String) -> Result<String> {

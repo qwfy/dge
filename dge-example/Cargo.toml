@@ -10,6 +10,11 @@ edition = "2018"
 dge-gen = { path = "../dge-gen", version = "0.1.0" }
 dge-runtime = { path = "../dge-runtime", version = "0.1.0" }
 tokio = { version = "1.5", features = ["full"] }
+lapin = "1.7.1"
+log = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0.24"
 
 [[bin]]
 name = "generate_code"

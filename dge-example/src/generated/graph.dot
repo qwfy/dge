@@ -1,12 +1,5 @@
 digraph {
     0 [ label = "start_node" ]
-    1 [ label = "duplicate_input_msg" ]
-    2 [ label = "add_1" ]
-    3 [ label = "add_2" ]
-    4 [ label = "wait_additions" ]
-    0 -> 1 [ label = "input_msg" ]
-    1 -> 2 [ label = "input_msg_copy_1" ]
-    1 -> 3 [ label = "input_msg_copy_2" ]
-    2 -> 4 [ label = "additions" ]
-    3 -> 4 [ label = "additions" ]
+    1 [ label = "wait_additions" ]
+    0 -> 1 [ label = "additions" ]
 }

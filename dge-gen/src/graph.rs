@@ -23,6 +23,7 @@ pub(crate) enum Node {
     WaitAll {
         name: String,
         merge_messages: String,
+        type_input_msg: String,
     },
     /// Wait for any incoming edges, merge the incoming messages for later consumption.
     WaitAny {
@@ -63,14 +64,16 @@ pub(crate) struct Edge {
 pub struct Graph {
     pub(crate) g: PetGraph,
     pub(crate) accept_failure: String,
+    pub(crate) type_error: String,
 }
 
 impl Graph {
     /// Create a new computational graph.
-    pub fn new(accept_failure: String) -> Graph {
+    pub fn new<S: Into<String>>(accept_failure: S, type_error: S) -> Graph {
         Graph {
             g: petgraph::Graph::new(),
-            accept_failure,
+            accept_failure: accept_failure.into(),
+            type_error: type_error.into(),
         }
     }
 
@@ -119,10 +122,12 @@ impl Graph {
         inputs: Vec<NodeIndex>,
         queue: S,
         merge_messages: S,
+        type_input_msg: S,
     ) -> NodeIndex {
         let wait_node_i = self.g.add_node(Node::WaitAll {
             name: name.into(),
             merge_messages: merge_messages.into(),
+            type_input_msg: type_input_msg.into(),
         });
         let queue = queue.into();
         for input_i in inputs {

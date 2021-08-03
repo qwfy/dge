@@ -1,5 +1,6 @@
+#[macro_export]
 macro_rules! maybe_send_to_next {
-    ($msg:expr, $queue:expr, $channel:expr, $accept_failure_msg:expr, $accept_failure:ident) => {{
+    ($msg:expr, $queue:expr, $channel:expr, $accept_failure_msg:expr, $accept_failure:path) => {{
         use log::debug;
         use log::info;
         use log::warn;
@@ -7,12 +8,15 @@ macro_rules! maybe_send_to_next {
         use serde_json;
         use std::fmt::Display;
 
-        use crate::rmq_primitive;
-        use crate::rmq_primitive::Responsibility;
-        use crate::Error;
-        use crate::Result;
+        use $crate::rmq_primitive;
+        use $crate::rmq_primitive::Responsibility;
+        use $crate::Error;
+        use $crate::Result;
 
-        match $queue {
+        // type annotation
+        let queue: Option<&str> = $queue;
+
+        match queue {
             None => {
                 // no further processing needed, just accept it
                 Ok(Responsibility::Accept)
@@ -30,7 +34,7 @@ macro_rules! maybe_send_to_next {
                         Ok(Responsibility::Accept)
                     }
                     Ok(payload) => {
-                        rmq_primitive::publish_delayed(Some($channel), &queue, payload).await?;
+                        rmq_primitive::publish_delayed(Some($channel), queue, payload).await?;
                         Ok(Responsibility::Accept)
                     }
                 }

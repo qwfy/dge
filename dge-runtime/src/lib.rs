@@ -1,4 +1,3 @@
-#[macro_use]
 mod helper_macro;
 
 pub mod component;

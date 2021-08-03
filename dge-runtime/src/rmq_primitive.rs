@@ -93,7 +93,12 @@ pub fn name_of_delay_queue(q: &str) -> String {
 }
 
 /// Publish the `msg` to `queue` at a later point in time.
-pub async fn publish_delayed(channel: Option<Channel>, queue: &str, msg: Vec<u8>) -> Result<()> {
+pub async fn publish_delayed<S: AsRef<str>>(
+    channel: Option<Channel>,
+    queue: S,
+    msg: Vec<u8>,
+) -> Result<()> {
+    let queue = queue.as_ref();
     let channel = match channel {
         None => create_channel().await?,
         Some(c) => c,

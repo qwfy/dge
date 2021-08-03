@@ -1,4 +1,8 @@
-{% include "header.rs" %}
+{% include "header_comment.rs" %}
+
+{% include "header_common_import.rs" %}
+
+#[rustfmt::skip]
 #[tokio::main(worker_threads = 2)]
 pub(crate) async fn main() {
     use {{ accept_failure }} as accept_failure;

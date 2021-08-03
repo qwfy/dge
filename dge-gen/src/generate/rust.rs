@@ -9,6 +9,13 @@ pub(crate) fn gen_opt_string(s: Option<String>) -> String {
     }
 }
 
+pub(crate) fn gen_opt_str(s: Option<String>) -> String {
+    match s {
+        None => "None".into(),
+        Some(s) => format!(r#"Some("{}")"#, s),
+    }
+}
+
 pub(crate) fn gen_vec_string(ss: Vec<String>) -> String {
     let middle: String = ss.into_iter().map(gen_string).collect::<Vec<_>>().join(",");
     format!(r#"vec![{}]"#, middle)
