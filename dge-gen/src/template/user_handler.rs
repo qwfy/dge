@@ -5,22 +5,30 @@
 #[rustfmt::skip]
 #[tokio::main(worker_threads = 2)]
 pub(crate) async fn main() {
-    use {{ accept_failure }} as accept_failure;
-    use {{ behaviour_module }}::handle as user_handler;
-    use {{ behaviour_module }}::init_state as init_state;
-
-    let handler_state = dge_runtime::component::user_handler::HandlerState {
-        accept_failure,
-        output_queue: {{ output_queue }},
-        user_handler,
-        user_handler_state: init_state().await,
-
-    };
+    let handler_state = {{ behaviour_module }}::init().await;
 
     let () = dge_runtime::rmq::consume_forever(
         {{ input_queue }},
-        dge_runtime::component::user_handler::user_handler,
+        handler,
         handler_state,
         {{ prefetch_count }},
     ).await;
+}
+
+
+#[rustfmt::skip]
+async fn handler(
+    state: {{ behaviour_module }}::State,
+    channel: Channel,
+    msg: {{ type_input }},
+) -> Result<Responsibility>
+{
+    dge_runtime::user_handler!(
+        state = state,
+        channel = channel,
+        msg = msg,
+        user_handler = {{ behaviour_module }}::handle,
+        accept_failure = {{ accept_failure }},
+        output_queue = {{ output_queue }},
+    )
 }

@@ -21,6 +21,15 @@ pub(crate) fn gen_vec_string(ss: Vec<String>) -> String {
     format!(r#"vec![{}]"#, middle)
 }
 
+pub(crate) fn gen_vec_str(ss: Vec<String>) -> String {
+    let middle: String = ss
+        .iter()
+        .map(|s| format!(r#""{}""#, s))
+        .collect::<Vec<_>>()
+        .join(",");
+    format!(r#"vec![{}]"#, middle)
+}
+
 pub(crate) fn gen_str(s: String) -> String {
     format!(r#""{}""#, s)
 }

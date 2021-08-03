@@ -47,19 +47,22 @@ pub(crate) fn generate<P: AsRef<Path>>(graph: Graph, dir: P) -> Result<()> {
                 )?;
                 update_outputs(&mut outputs, dir, name, content);
             }
-            Node::FanOut { name } => {
-                let content = generate_fan_out(g, node_i, graph.accept_failure.clone())?;
+            Node::FanOut { name, type_input } => {
+                let content =
+                    generate_fan_out(g, node_i, graph.accept_failure.clone(), type_input.clone())?;
                 update_outputs(&mut outputs, dir, name, content);
             }
             Node::UserHandler {
                 name,
                 behaviour_module,
+                type_input,
             } => {
                 let content = generate_user_handler(
                     g,
                     node_i,
                     behaviour_module.into(),
                     graph.accept_failure.clone(),
+                    type_input.clone(),
                 )?;
                 update_outputs(&mut outputs, dir, name, content);
             }
@@ -101,7 +104,12 @@ fn generate_aggregate(
     )
 }
 
-fn generate_fan_out(g: &PetGraph, node_i: NodeIndex, accept_failure: String) -> Result<String> {
+fn generate_fan_out(
+    g: &PetGraph,
+    node_i: NodeIndex,
+    accept_failure: String,
+    type_input: String,
+) -> Result<String> {
     let Edge { queue: input_queue } = expect_one_incoming_edge(g, node_i)?;
 
     // find output queues
@@ -113,7 +121,12 @@ fn generate_fan_out(g: &PetGraph, node_i: NodeIndex, accept_failure: String) -> 
         output_queues.push(output_queue)
     }
 
-    super::fan_out::generate(input_queue.clone(), output_queues, accept_failure)
+    super::fan_out::generate(
+        input_queue.clone(),
+        output_queues,
+        accept_failure,
+        type_input,
+    )
 }
 
 fn generate_user_handler(
@@ -121,10 +134,17 @@ fn generate_user_handler(
     node_i: NodeIndex,
     module: String,
     accept_failure: String,
+    type_input: String,
 ) -> Result<String> {
     let Edge { queue: input_queue } = expect_one_incoming_edge(g, node_i)?;
     let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
-    super::user_handler::generate(input_queue.clone(), output_queue, module, accept_failure)
+    super::user_handler::generate(
+        input_queue.clone(),
+        output_queue,
+        module,
+        accept_failure,
+        type_input,
+    )
 }
 
 fn expect_one_incoming_edge(g: &PetGraph, node_i: NodeIndex) -> Result<&Edge> {

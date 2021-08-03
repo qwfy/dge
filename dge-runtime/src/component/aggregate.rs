@@ -1,18 +1,3 @@
-use futures::Future;
-use lapin::Channel;
-use log::debug;
-use log::info;
-use log::warn;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use serde_json;
-use std::fmt::Display;
-
-use crate::rmq_primitive;
-use crate::rmq_primitive::Responsibility;
-use crate::Error;
-use crate::Result;
-
 /// Status of merging multiple messages into one `Aggregated`
 pub enum AggregationStatus<Aggregated> {
     /// The merge is incomplete, need more incoming messages.

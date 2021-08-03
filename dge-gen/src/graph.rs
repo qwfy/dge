@@ -25,11 +25,12 @@ pub(crate) enum Node {
         type_input: String,
     },
     /// Duplicate the output of one node to multiple nodes.
-    FanOut { name: String },
+    FanOut { name: String, type_input: String },
     /// A user-provided handler that transform the input message into the output message.
     UserHandler {
         name: String,
         behaviour_module: String,
+        type_input: String,
     },
 }
 
@@ -92,10 +93,12 @@ impl Graph {
         input: NodeIndex,
         queue: S,
         behaviour_module: S,
+        type_input: S,
     ) -> NodeIndex {
         let handler_node = Node::UserHandler {
             name: name.into(),
             behaviour_module: behaviour_module.into(),
+            type_input: type_input.into(),
         };
         let handler_node_i = self.g.add_node(handler_node);
         let edge = Edge {
@@ -139,8 +142,17 @@ impl Graph {
     /// to all outgoing edges of the newly created node.
     ///
     /// Return a handle to the newly created node
-    pub fn fan_out<S: Into<String>>(&mut self, name: S, input: NodeIndex, queue: S) -> NodeIndex {
-        let fan_out_i = self.g.add_node(Node::FanOut { name: name.into() });
+    pub fn fan_out<S: Into<String>>(
+        &mut self,
+        name: S,
+        input: NodeIndex,
+        queue: S,
+        type_input: S,
+    ) -> NodeIndex {
+        let fan_out_i = self.g.add_node(Node::FanOut {
+            name: name.into(),
+            type_input: type_input.into(),
+        });
         self.g.add_edge(
             input,
             fan_out_i,

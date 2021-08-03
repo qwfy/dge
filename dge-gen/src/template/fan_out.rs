@@ -2,20 +2,34 @@
 
 {% include "part_common_import.rs" %}
 
+type HandlerState = ();
+
 #[rustfmt::skip]
 #[tokio::main(worker_threads = 2)]
 pub(crate) async fn main() {
-    use {{ accept_failure }} as accept_failure;
-
-    let handler_state = dge_runtime::component::fan_out::HandlerState {
-        accept_failure,
-        output_queues: {{ output_queues }},
-    };
+    let handler_state = ();
 
     let () = dge_runtime::rmq::consume_forever(
         {{ input_queue }},
-        dge_runtime::component::fan_out::fan_out,
+        handler,
         handler_state,
         {{ prefetch_count }},
     ).await;
+}
+
+
+#[rustfmt::skip]
+async fn handler(
+    _state: HandlerState,
+    channel: Channel,
+    msg: {{ type_input }},
+) -> Result<Responsibility>
+{
+    dge_runtime::fan_out!(
+        state = state,
+        channel = channel,
+        msg = msg,
+        accept_failure = {{ accept_failure }},
+        output_queues = {{ output_queues }},
+    )
 }
