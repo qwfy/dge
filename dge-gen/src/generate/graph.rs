@@ -47,13 +47,6 @@ pub(crate) fn generate<P: AsRef<Path>>(graph: Graph, dir: P) -> Result<()> {
                 )?;
                 update_outputs(&mut outputs, dir, name, content);
             }
-            Node::WaitAny {
-                name,
-                merge_messages,
-            } => {
-                let content = generate_wait_any(g, node_i, merge_messages.into())?;
-                update_outputs(&mut outputs, dir, name, content);
-            }
             Node::FanOut { name } => {
                 let content = generate_fan_out(g, node_i, graph.accept_failure.clone())?;
                 update_outputs(&mut outputs, dir, name, content);
@@ -106,12 +99,6 @@ fn generate_wait_all(
         type_input_msg,
         type_error,
     )
-}
-
-fn generate_wait_any(g: &PetGraph, node_i: NodeIndex, merge_messages: String) -> Result<String> {
-    let input_queue = expect_one_input_queue_for_aggregation_node(g, node_i)?;
-    let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
-    super::wait_any::generate(input_queue, merge_messages, output_queue)
 }
 
 fn generate_fan_out(g: &PetGraph, node_i: NodeIndex, accept_failure: String) -> Result<String> {

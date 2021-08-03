@@ -25,11 +25,6 @@ pub(crate) enum Node {
         merge_messages: String,
         type_input_msg: String,
     },
-    /// Wait for any incoming edges, merge the incoming messages for later consumption.
-    WaitAny {
-        name: String,
-        merge_messages: String,
-    },
     /// Duplicate the output of one node to multiple nodes.
     FanOut { name: String },
     /// A user-provided handler that transform the input message into the output message.
@@ -44,7 +39,6 @@ impl Node {
         match self {
             Node::Start { name, .. } => name.clone(),
             Node::WaitAll { name, .. } => name.clone(),
-            Node::WaitAny { name, .. } => name.clone(),
             Node::FanOut { name, .. } => name.clone(),
             Node::UserHandler { name, .. } => name.clone(),
         }
@@ -140,31 +134,6 @@ impl Graph {
             );
         }
         wait_node_i
-    }
-
-    /// Like [`wait_all`], but wait at least one messages instead of all of them.
-    pub fn wait_any<S: Into<String>>(
-        &mut self,
-        name: S,
-        inputs: Vec<NodeIndex>,
-        queue: S,
-        merge_messages: S,
-    ) -> NodeIndex {
-        let wait_any_i = self.g.add_node(Node::WaitAny {
-            name: name.into(),
-            merge_messages: merge_messages.into(),
-        });
-        let queue = queue.into();
-        for input_i in inputs {
-            self.g.add_edge(
-                input_i,
-                wait_any_i,
-                Edge {
-                    queue: queue.clone(),
-                },
-            );
-        }
-        wait_any_i
     }
 
     /// Create a node that will copy messages of `input` delivered via `queue`
