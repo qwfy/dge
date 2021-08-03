@@ -13,11 +13,16 @@ use crate::rmq_primitive::Responsibility;
 use crate::Error;
 use crate::Result;
 
-pub struct HandlerState<InputMsg, OutputMsg, UserError, AcceptFailureResult, UserHandlerState> {
-    user_handler: fn(UserHandlerState, &InputMsg) -> std::result::Result<OutputMsg, UserError>,
-    user_handler_state: UserHandlerState,
-    accept_failure: fn(&InputMsg, UserError) -> AcceptFailureResult,
-    output_queue: Option<String>,
+#[derive(Clone)]
+pub struct HandlerState<InputMsg, OutputMsg, UserError, UserHandlerState: Clone> {
+    pub user_handler: fn(
+        UserHandlerState,
+        &InputMsg,
+    ) -> Future<Output = std::result::Result<OutputMsg, UserError>>,
+    pub user_handler_state: UserHandlerState,
+    pub accept_failure:
+        fn(&InputMsg, UserError) -> Future<Output = std::result::Result<(), UserError>>,
+    pub output_queue: Option<String>,
 }
 
 pub async fn user_handler<
@@ -27,8 +32,9 @@ pub async fn user_handler<
     MergeResult,
     AcceptFailureResult,
     UserHandlerState,
+    HandlerResult,
 >(
-    state: HandlerState<InputMsg, OutputMsg, UserError, AcceptFailureResult, UserHandlerState>,
+    state: HandlerState<InputMsg, HandlerResult, UserError, UserHandlerState>,
     channel: Channel,
     msg: InputMsg,
 ) -> Result<Responsibility>
@@ -37,12 +43,14 @@ where
     OutputMsg: Serialize + Send + 'static,
     UserError: Display + From<serde_json::Error>,
     AcceptFailureResult: Future<Output = std::result::Result<(), UserError>>,
+    HandlerResult: Future<Output = std::result::Result<OutputMsg, UserError>>,
+    UserHandlerState: Clone + Send + 'static,
 {
     let accept_failure = state.accept_failure;
     let output_queue = state.output_queue;
     let user_f = state.user_handler;
     let user_state = state.user_handler_state;
-    match user_f(user_state, &msg) {
+    match user_f(user_state, &msg).await {
         Err(user_error) => {
             // TODO @incomplete: for now treat user error as final, this should be recosnidered
             warn!(

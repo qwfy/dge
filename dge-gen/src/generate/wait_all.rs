@@ -2,6 +2,7 @@ use askama::Template;
 
 use super::rust::gen_ident;
 use super::rust::gen_opt_string;
+use super::rust::gen_str;
 use super::rust::gen_string;
 use super::rust::gen_u32;
 use super::rust::gen_vec_string;
@@ -28,7 +29,7 @@ pub(crate) fn generate(
         merge_messages: gen_ident(merge_messages),
         accept_failure: gen_ident(accept_failure),
         output_queue: gen_opt_string(output_queue),
-        input_queue: gen_string(input_queue),
+        input_queue: gen_str(input_queue),
         // TODO @incomplete: make it configurable
         prefetch_count: gen_u32(1),
     };

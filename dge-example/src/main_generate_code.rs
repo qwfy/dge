@@ -20,7 +20,7 @@ fn main() {
         "wait_additions",
         vec![add_1, add_2],
         "additions".into(),
-        "crate::behaviour::merge_additions".into(),
+        "crate::behaviour::merge_additions::merge".into(),
     );
     graph.generate("src/generated").unwrap()
 }

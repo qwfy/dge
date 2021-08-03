@@ -13,9 +13,10 @@ use crate::rmq_primitive::Responsibility;
 use crate::Error;
 use crate::Result;
 
+#[derive(Clone)]
 pub struct HandlerState<InputMsg, UserError, AcceptFailureResult> {
-    accept_failure: fn(&InputMsg, UserError) -> AcceptFailureResult,
-    output_queues: Vec<String>,
+    pub accept_failure: fn(&InputMsg, UserError) -> AcceptFailureResult,
+    pub output_queues: Vec<String>,
 }
 
 pub async fn fan_out<InputMsg, UserError, AcceptFailureResult>(

@@ -23,10 +23,11 @@ pub enum MergeStatus<MergedMsg> {
     AlreadyMerged,
 }
 
+#[derive(Clone)]
 pub struct HandlerState<InputMsg, MergeResult, UserError, AcceptFailureResult> {
-    merge_messages: fn(&InputMsg) -> MergeResult,
-    accept_failure: fn(&InputMsg, UserError) -> AcceptFailureResult,
-    output_queue: Option<String>,
+    pub merge_messages: fn(&InputMsg) -> MergeResult,
+    pub accept_failure: fn(&InputMsg, UserError) -> AcceptFailureResult,
+    pub output_queue: Option<String>,
 }
 
 pub async fn wait_all<InputMsg, MergedMsg, UserError, MergeResult, AcceptFailureResult>(

@@ -9,15 +9,19 @@ use dge_runtime;
 #[rustfmt::skip]
 #[tokio::main(worker_threads = 2)]
 pub(crate) async fn main() {
+    use crate::behaviour::accept_failure::accept_failure as accept_failure;
+    use crate::behaviour::merge_additions::merge as merge_messages;
+
     let handler_state = dge_runtime::component::wait_all::HandlerState {
-        merge_messages: crate::behaviour::merge_additions,
-        accept_failure: crate::behaviour::accept_failure::accept_failure,
+        merge_messages,
+        accept_failure,
         output_queue: None,
     };
+
     let () = dge_runtime::rmq::consume_forever(
-        String::from("additions"),
+        "additions",
         dge_runtime::component::wait_all::wait_all,
         handler_state,
         1,
-    );
+    ).await;
 }

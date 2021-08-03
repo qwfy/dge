@@ -14,6 +14,10 @@ pub(crate) fn gen_vec_string(ss: Vec<String>) -> String {
     format!(r#"vec![{}]"#, middle)
 }
 
+pub(crate) fn gen_str(s: String) -> String {
+    format!(r#""{}""#, s)
+}
+
 pub(crate) fn gen_u32(n: u32) -> String {
     n.to_string()
 }
