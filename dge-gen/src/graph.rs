@@ -19,8 +19,7 @@ use crate::Result;
 pub(crate) enum Node {
     /// A no-op node that indicates the start of the computation.
     Start { name: String },
-    /// Wait for all incoming edges, merge the incoming messages for later consumption.
-    WaitAll {
+    Aggregate {
         name: String,
         merge_messages: String,
         type_input_msg: String,
@@ -38,7 +37,7 @@ impl Node {
     pub(crate) fn name(&self) -> String {
         match self {
             Node::Start { name, .. } => name.clone(),
-            Node::WaitAll { name, .. } => name.clone(),
+            Node::Aggregate { name, .. } => name.clone(),
             Node::FanOut { name, .. } => name.clone(),
             Node::UserHandler { name, .. } => name.clone(),
         }
@@ -106,11 +105,11 @@ impl Graph {
         handler_node_i
     }
 
-    /// Add a node that waits for all messages from `inputs` that belong to a single run,
+    /// Add a node that aggregate messages from `inputs` that belong to a single run,
     /// and merge them for later consumption.
     ///
     /// Return a handle to the newly added node.
-    pub fn wait_all<S: Into<String>>(
+    pub fn aggregate<S: Into<String>>(
         &mut self,
         name: S,
         inputs: Vec<NodeIndex>,
@@ -118,7 +117,7 @@ impl Graph {
         merge_messages: S,
         type_input_msg: S,
     ) -> NodeIndex {
-        let wait_node_i = self.g.add_node(Node::WaitAll {
+        let wait_node_i = self.g.add_node(Node::Aggregate {
             name: name.into(),
             merge_messages: merge_messages.into(),
             type_input_msg: type_input_msg.into(),

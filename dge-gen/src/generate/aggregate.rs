@@ -10,7 +10,7 @@ use crate::Error;
 use crate::Result;
 
 #[derive(Template)]
-#[template(path = "wait_all.rs", escape = "none")]
+#[template(path = "aggregate.rs", escape = "none")]
 struct WaitAllTemplate {
     type_input_msg: String,
     type_error: String,

@@ -24,7 +24,7 @@ pub enum MergeStatus<MergedMsg> {
 }
 
 #[macro_export]
-macro_rules! wait_all {
+macro_rules! aggregate {
     (
         state=$state:ident, channel=$channel:ident, msg=$msg:ident,
         merge_messages=$merge_messages:path,

@@ -2,7 +2,7 @@
 
 {% include "part_common_import.rs" %}
 
-use dge_runtime::component::wait_all::MergeStatus;
+use dge_runtime::component::aggregate::MergeStatus;
 
 type HandlerState = ();
 
@@ -27,7 +27,7 @@ async fn handler(
     msg: {{ type_input_msg }},
 ) -> Result<Responsibility>
 {
-    dge_runtime::wait_all!(
+    dge_runtime::aggregate!(
         state = state,
         channel = channel,
         msg = msg,

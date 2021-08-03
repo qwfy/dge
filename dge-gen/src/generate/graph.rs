@@ -32,12 +32,12 @@ pub(crate) fn generate<P: AsRef<Path>>(graph: Graph, dir: P) -> Result<()> {
         match node {
             // start node doesn't need any code
             Node::Start { .. } => (),
-            Node::WaitAll {
+            Node::Aggregate {
                 name,
                 merge_messages,
                 type_input_msg,
             } => {
-                let content = generate_wait_all(
+                let content = generate_aggregate(
                     g,
                     node_i,
                     merge_messages.into(),
@@ -81,7 +81,7 @@ pub(crate) fn generate<P: AsRef<Path>>(graph: Graph, dir: P) -> Result<()> {
     Ok(())
 }
 
-fn generate_wait_all(
+fn generate_aggregate(
     g: &PetGraph,
     node_i: NodeIndex,
     merge_messages: String,
@@ -91,7 +91,7 @@ fn generate_wait_all(
 ) -> Result<String> {
     let input_queue = expect_one_input_queue_for_aggregation_node(g, node_i)?;
     let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
-    super::wait_all::generate(
+    super::aggregate::generate(
         input_queue,
         merge_messages,
         output_queue,

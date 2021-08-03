@@ -18,7 +18,7 @@ use dge_runtime;
 use dge_runtime::rmq_primitive::Responsibility;
 use dge_runtime::Result;
 
-use dge_runtime::component::wait_all::MergeStatus;
+use dge_runtime::component::aggregate::MergeStatus;
 
 type HandlerState = ();
 
@@ -43,7 +43,7 @@ async fn handler(
     msg: i32,
 ) -> Result<Responsibility>
 {
-    dge_runtime::wait_all!(
+    dge_runtime::aggregate!(
         state = state,
         channel = channel,
         msg = msg,
