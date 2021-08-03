@@ -2,7 +2,7 @@
 
 {% include "part_common_import.rs" %}
 
-use dge_runtime::component::aggregate::MergeStatus;
+use dge_runtime::component::aggregate::AggregationStatus;
 
 type HandlerState = ();
 
@@ -24,14 +24,14 @@ pub(crate) async fn main() {
 async fn handler(
     _state: HandlerState,
     channel: Channel,
-    msg: {{ type_input_msg }},
+    msg: {{ type_input }},
 ) -> Result<Responsibility>
 {
     dge_runtime::aggregate!(
         state = state,
         channel = channel,
         msg = msg,
-        merge_messages = {{ merge_messages }},
+        aggregate = {{ aggregate }},
         accept_failure = {{ accept_failure }},
         output_queue = {{ output_queue }},
     )

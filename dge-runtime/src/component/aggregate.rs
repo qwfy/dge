@@ -13,25 +13,25 @@ use crate::rmq_primitive::Responsibility;
 use crate::Error;
 use crate::Result;
 
-/// Status of merging multiple messages into one `MergedMsg`
-pub enum MergeStatus<MergedMsg> {
+/// Status of merging multiple messages into one `Aggregated`
+pub enum AggregationStatus<Aggregated> {
     /// The merge is incomplete, need more incoming messages.
     Partial,
     /// For the first time, the multiple input messages are merged into one.
-    FreshMerge(MergedMsg),
+    FreshAggregation(Aggregated),
     /// The incoming messages are already merged previously.
-    AlreadyMerged,
+    AlreadyAggregated,
 }
 
 #[macro_export]
 macro_rules! aggregate {
     (
         state=$state:ident, channel=$channel:ident, msg=$msg:ident,
-        merge_messages=$merge_messages:path,
+        aggregate=$aggregate:path,
         accept_failure=$accept_failure:path,
         output_queue=$output_queue:expr $(,)?
     ) => {
-        match $merge_messages(&$msg).await {
+        match $aggregate(&$msg).await {
             Err(user_error) => {
                 // user handler returned error,
                 // since this may be a transient error (i.e. db op), we retry it.
@@ -43,15 +43,15 @@ macro_rules! aggregate {
                 // reject the message to retry
                 Ok(Responsibility::Reject)
             }
-            Ok(MergeStatus::Partial) => {
+            Ok(AggregationStatus::Partial) => {
                 // messages is not merged yet
                 Ok(Responsibility::Accept)
             }
-            Ok(MergeStatus::AlreadyMerged) => {
+            Ok(AggregationStatus::AlreadyAggregated) => {
                 // messages is not merged yet
                 Ok(Responsibility::Accept)
             }
-            Ok(MergeStatus::FreshMerge(merged_msg)) => {
+            Ok(AggregationStatus::FreshAggregation(merged_msg)) => {
                 $crate::maybe_send_to_next!(
                     &merged_msg,
                     $output_queue,

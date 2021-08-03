@@ -34,15 +34,15 @@ pub(crate) fn generate<P: AsRef<Path>>(graph: Graph, dir: P) -> Result<()> {
             Node::Start { .. } => (),
             Node::Aggregate {
                 name,
-                merge_messages,
-                type_input_msg,
+                aggregate,
+                type_input,
             } => {
                 let content = generate_aggregate(
                     g,
                     node_i,
-                    merge_messages.into(),
+                    aggregate.into(),
                     graph.accept_failure.clone(),
-                    type_input_msg.clone(),
+                    type_input.clone(),
                     graph.type_error.clone(),
                 )?;
                 update_outputs(&mut outputs, dir, name, content);
@@ -84,19 +84,19 @@ pub(crate) fn generate<P: AsRef<Path>>(graph: Graph, dir: P) -> Result<()> {
 fn generate_aggregate(
     g: &PetGraph,
     node_i: NodeIndex,
-    merge_messages: String,
+    aggregate: String,
     accept_failure: String,
-    type_input_msg: String,
+    type_input: String,
     type_error: String,
 ) -> Result<String> {
     let input_queue = expect_one_input_queue_for_aggregation_node(g, node_i)?;
     let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
     super::aggregate::generate(
         input_queue,
-        merge_messages,
+        aggregate,
         output_queue,
         accept_failure,
-        type_input_msg,
+        type_input,
         type_error,
     )
 }

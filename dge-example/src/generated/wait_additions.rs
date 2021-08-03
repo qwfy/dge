@@ -18,7 +18,7 @@ use dge_runtime;
 use dge_runtime::rmq_primitive::Responsibility;
 use dge_runtime::Result;
 
-use dge_runtime::component::aggregate::MergeStatus;
+use dge_runtime::component::aggregate::AggregationStatus;
 
 type HandlerState = ();
 
@@ -47,7 +47,7 @@ async fn handler(
         state = state,
         channel = channel,
         msg = msg,
-        merge_messages = crate::behaviour::merge_additions::merge,
+        aggregate = crate::behaviour::merge_additions::merge,
         accept_failure = crate::behaviour::accept_failure::accept_failure,
         output_queue = None,
     )

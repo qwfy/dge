@@ -21,8 +21,8 @@ pub(crate) enum Node {
     Start { name: String },
     Aggregate {
         name: String,
-        merge_messages: String,
-        type_input_msg: String,
+        aggregate: String,
+        type_input: String,
     },
     /// Duplicate the output of one node to multiple nodes.
     FanOut { name: String },
@@ -106,7 +106,7 @@ impl Graph {
     }
 
     /// Add a node that aggregate messages from `inputs` that belong to a single run,
-    /// and merge them for later consumption.
+    /// and aggregate them for later consumption.
     ///
     /// Return a handle to the newly added node.
     pub fn aggregate<S: Into<String>>(
@@ -114,13 +114,13 @@ impl Graph {
         name: S,
         inputs: Vec<NodeIndex>,
         queue: S,
-        merge_messages: S,
-        type_input_msg: S,
+        aggregate: S,
+        type_input: S,
     ) -> NodeIndex {
         let wait_node_i = self.g.add_node(Node::Aggregate {
             name: name.into(),
-            merge_messages: merge_messages.into(),
-            type_input_msg: type_input_msg.into(),
+            aggregate: aggregate.into(),
+            type_input: type_input.into(),
         });
         let queue = queue.into();
         for input_i in inputs {
