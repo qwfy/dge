@@ -68,10 +68,24 @@ pub(crate) fn generate<P: AsRef<Path>>(graph: Graph, dir: P) -> Result<()> {
     info!("writing dot graph to {}", &dot_file_path.display());
     std::fs::write(dot_file_path, format!("{}", dot))?;
 
+    let mut mods = Vec::new();
+    // write each file
     for (file_path, content) in outputs {
         info!("writing to {}", &file_path.display());
-        std::fs::write(file_path, content)?
+        std::fs::write(&file_path, content)?;
+
+        match &file_path.file_stem() {
+            None => return Err(Error::InvalidFileName((&file_path).display().to_string())),
+            Some(file_stem) => match (*file_stem).to_str() {
+                None => return Err(Error::InvalidFileName((&file_path).display().to_string())),
+                Some(s) => mods.push(format!("pub(crate) mod {};", s)),
+            },
+        }
     }
+
+    // write mod.rs
+    let mods: String = mods.join("\n");
+    std::fs::write(dir.join("mod.rs"), mods)?;
 
     Ok(())
 }

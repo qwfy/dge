@@ -14,4 +14,7 @@ pub enum Error {
 
     #[error(transparent)]
     IoError(#[from] std::io::Error),
+
+    #[error("The given file name is not valid: {}", .0)]
+    InvalidFileName(String),
 }
