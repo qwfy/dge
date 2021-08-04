@@ -238,6 +238,6 @@ fn update_outputs<P: AsRef<Path>, S: AsRef<str>>(
 fn map_to_string(old: &PetGraph) -> petgraph::Graph<String, String> {
     old.map(
         |node_index, node| node.name(),
-        |edge_index, edge| edge.queue.clone(),
+        |edge_index, edge| format!("{}<{}>", edge.queue, edge.msg_type),
     )
 }
