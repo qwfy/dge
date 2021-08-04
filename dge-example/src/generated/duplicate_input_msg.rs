@@ -15,6 +15,7 @@ use serde_json;
 use std::fmt::Display;
 
 use dge_runtime;
+use dge_runtime::rmq_init;
 use dge_runtime::rmq_primitive;
 use dge_runtime::rmq_primitive::Responsibility;
 use dge_runtime::Error;
@@ -24,15 +25,20 @@ type HandlerState = ();
 
 #[rustfmt::skip]
 #[tokio::main(worker_threads = 2)]
-pub(crate) async fn main() {
+pub(crate) async fn main() -> Result<()> {
+    let rmq_uri = crate::behaviour::get_rmq_uri();
+
     let handler_state = ();
 
     let () = dge_runtime::rmq::consume_forever(
+        &rmq_uri,
         "input_msg",
         handler,
         handler_state,
         1,
     ).await;
+
+    Ok(())
 }
 
 
@@ -49,5 +55,6 @@ async fn handler(
         msg = msg,
         accept_failure = crate::behaviour::accept_failure::accept_failure,
         output_queues = vec!["input_msg_copy_2","input_msg_copy_1"],
+        exchange = "some_work_exchange",
     )
 }

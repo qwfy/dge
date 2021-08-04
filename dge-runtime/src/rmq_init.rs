@@ -17,7 +17,7 @@ use crate::rmq_primitive::constant::RMQ_QUEUE_DECLARE_OPTIONS;
 /// For a message published to `work_queue` of direct exchange `work_direct_exchange`:
 ///
 /// - if the consumer of `work_queue` `ack`s it, then this is the end of this message
-/// - if the consumer `nack`ed it, then it will be dead-lettered  to `retry_queue` of
+/// - if the consumer `reject`ed it, then it will be dead-lettered  to `retry_queue` of
 ///   direct exchange `retry_direct_exchange`, after `retry_interval_in_seconds`,
 ///   the message will be delivered to `work_queue` again, the cycle continues
 ///
@@ -29,19 +29,21 @@ use crate::rmq_primitive::constant::RMQ_QUEUE_DECLARE_OPTIONS;
 ///
 /// Both `work_direct_exchange` and `retry_direct_exchange` should be direct exchanges,
 /// the implementation depends on this.
-pub async fn init_with_retry<S: AsRef<str>>(
+pub async fn init_work_queue<S: AsRef<str>>(
+    rmq_uri: S,
     work_direct_exchange: S,
     work_queue: S,
     retry_direct_exchange: S,
     retry_queue: S,
     retry_interval_in_seconds: u32,
 ) -> Result<()> {
+    let rmq_uri = rmq_uri.as_ref();
     let work_direct_exchange = work_direct_exchange.as_ref();
     let retry_direct_exchange = retry_direct_exchange.as_ref();
     let work_queue = work_queue.as_ref();
     let retry_queue = retry_queue.as_ref();
 
-    let channel = rmq_primitive::create_channel().await?;
+    let channel = rmq_primitive::create_channel(rmq_uri).await?;
 
     let exchanges: [&str; 2] = [work_direct_exchange, retry_direct_exchange];
     for exchange in exchanges.into_iter() {
@@ -136,6 +138,26 @@ pub async fn init_with_retry<S: AsRef<str>>(
         "done creating exchanges and queues for work queue {}",
         work_queue
     );
+
+    Ok(())
+}
+
+pub async fn init_exchanges_and_queues<S: AsRef<str>>(
+    rmq_uri: S,
+    work_direct_exchange: S,
+    retry_direct_exchange: S,
+    queues: Vec<(S, S, u32)>,
+) -> Result<()> {
+    for (work_queue, retry_queue, retry_interval_in_seconds) in queues.into_iter() {
+        let () = init_work_queue(
+            rmq_uri.as_ref(),
+            work_direct_exchange.as_ref(),
+            work_queue.as_ref(),
+            retry_direct_exchange.as_ref(),
+            retry_queue.as_ref(),
+            retry_interval_in_seconds,
+        ).await?;
+    }
 
     Ok(())
 }

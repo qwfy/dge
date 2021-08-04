@@ -20,7 +20,7 @@ pub enum Responsibility {
 
 pub enum AckType {
     Ack,
-    Nack,
+    Reject,
 }
 
 pub async fn unreliable_ack_or_reject(
@@ -30,7 +30,7 @@ pub async fn unreliable_ack_or_reject(
 ) {
     let (fut, action) = match ack_type {
         AckType::Ack => (channel.basic_ack(tag, RMQ_BASIC_ACK_OPTIONS), "acking"),
-        AckType::Nack => (
+        AckType::Reject => (
             channel.basic_reject(tag, RMQ_BASIC_REJECT_DELAYED_REQUEUE_OPTIONS),
             "rejecting",
         ),
@@ -62,7 +62,7 @@ pub async fn unreliable_ack_or_reject(
                 Ok(()) => info!("channel closed"),
                 // TODO @incomplete: how to force a close
                 Err(e) => warn!(
-                    "failed to close channel, message {} may be left as un-acked/un-nacked: {}",
+                    "failed to close channel, message {} may be left as un-acked/un-rejected: {}",
                     tag, e
                 ),
             }
@@ -70,13 +70,10 @@ pub async fn unreliable_ack_or_reject(
     }
 }
 
-pub async fn create_channel() -> Result<Channel> {
+pub async fn create_channel<S: AsRef<str>>(rmq_uri: S) -> Result<Channel> {
+    let rmq_uri = rmq_uri.as_ref();
     info!("creating connection and channel channel");
-    let conn = Connection::connect(
-        "TODO @incomplete: rmq uri here",
-        ConnectionProperties::default().with_tokio(),
-    )
-    .await?;
+    let conn = Connection::connect(rmq_uri, ConnectionProperties::default().with_tokio()).await?;
 
     let channel = conn.create_channel().await?;
 
@@ -88,27 +85,20 @@ pub fn name_of_retry_queue(q: &str) -> String {
     format!("dge_retry_{}", q)
 }
 
-pub fn name_of_delay_queue(q: &str) -> String {
-    format!("dge_delay_{}", q)
-}
-
-/// Publish the `msg` to `queue` at a later point in time.
-pub async fn publish_delayed<S: AsRef<str>>(
-    channel: Option<Channel>,
+/// Publish the `msg` to `queue`.
+pub async fn publish<S: AsRef<str>>(
+    channel: Channel,
+    exchange: S,
     queue: S,
     msg: Vec<u8>,
 ) -> Result<()> {
+    let exchange = exchange.as_ref();
     let queue = queue.as_ref();
-    let channel = match channel {
-        None => create_channel().await?,
-        Some(c) => c,
-    };
 
-    let delay_routing_key = name_of_delay_queue(queue);
     let confirm = channel
         .basic_publish(
-            RMQ_DELAY_EXCHANGE,
-            &delay_routing_key,
+            exchange,
+            &queue,
             RMQ_BASIC_PUBLISH_OPTIONS,
             msg,
             // 2 means durable
@@ -133,12 +123,6 @@ pub async fn publish_delayed<S: AsRef<str>>(
 
 pub(crate) mod constant {
     use lapin::options::*;
-
-    pub static RMQ_EXCHANGE: &str = "amq.direct";
-    pub static RMQ_RETRY_EXCHANGE: &str = "dlx.retry";
-    pub static RMQ_DELAY_EXCHANGE: &str = "delay";
-    pub static RMQ_RETRY_INTERVAL_SECONDS: u32 = 60;
-    pub static RMQ_DELAY_INTERVAL_SECONDS: u32 = 2;
 
     pub static RMQ_QUEUE_DECLARE_OPTIONS: QueueDeclareOptions = QueueDeclareOptions {
         passive: false, // create if not exist

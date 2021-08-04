@@ -14,8 +14,21 @@ use crate::graph::PetGraph;
 use crate::Error;
 use crate::Result;
 
+#[derive(Clone)]
+pub(crate) struct RmqOptions {
+    pub(crate) get_rmq_uri: String,
+    pub(crate) work_exchange: String,
+    pub(crate) retry_exchange: String,
+    pub(crate) retry_queue_prefix: String,
+    pub(crate) retry_queue_suffix: String,
+}
+
 /// Generate codes corresponding the graph.
-pub(crate) fn generate<P: AsRef<Path>>(graph: Graph, dir: P) -> Result<()> {
+pub(crate) fn generate<P: AsRef<Path>>(
+    graph: Graph,
+    dir: P,
+    rmq_options: RmqOptions,
+) -> Result<()> {
     let g = &graph.g;
     let mut outputs = HashMap::new();
     let dir = dir.as_ref();
@@ -39,11 +52,17 @@ pub(crate) fn generate<P: AsRef<Path>>(graph: Graph, dir: P) -> Result<()> {
                     aggregate.into(),
                     graph.accept_failure.clone(),
                     graph.type_error.clone(),
+                    rmq_options.clone(),
                 )?;
                 update_outputs(&mut outputs, dir, name, content);
             }
             Node::FanOut { name } => {
-                let content = generate_fan_out(g, node_i, graph.accept_failure.clone())?;
+                let content = generate_fan_out(
+                        g,
+                        node_i,
+                        graph.accept_failure.clone(),
+                        rmq_options.clone()
+                    )?;
                 update_outputs(&mut outputs, dir, name, content);
             }
             Node::UserHandler {
@@ -55,11 +74,16 @@ pub(crate) fn generate<P: AsRef<Path>>(graph: Graph, dir: P) -> Result<()> {
                     node_i,
                     behaviour_module.into(),
                     graph.accept_failure.clone(),
+                    rmq_options.clone(),
                 )?;
                 update_outputs(&mut outputs, dir, name, content);
             }
         }
     }
+
+    // generate queue declarations
+    let content = generate_init_exchanges_and_queues(g, rmq_options.clone())?;
+    update_outputs(&mut outputs, dir, "init_exchanges_and_queues", content);
 
     // write the graph in dot format
     let graph_for_display = map_to_string(g);
@@ -124,10 +148,12 @@ fn generate_aggregate(
     aggregate: String,
     accept_failure: String,
     type_error: String,
+    rmq_options: RmqOptions,
 ) -> Result<String> {
     let Edge {
         queue: input_queue,
         msg_type: type_input,
+        retry_interval_in_seconds: _,
     } = expect_one_input_edge_for_aggregation_node(g, node_i)?;
     let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
     super::aggregate::generate(
@@ -137,13 +163,20 @@ fn generate_aggregate(
         accept_failure,
         type_input,
         type_error,
+        rmq_options,
     )
 }
 
-fn generate_fan_out(g: &PetGraph, node_i: NodeIndex, accept_failure: String) -> Result<String> {
+fn generate_fan_out(
+    g: &PetGraph,
+    node_i: NodeIndex,
+    accept_failure: String,
+    rmq_options: RmqOptions,
+) -> Result<String> {
     let Edge {
         queue: input_queue,
         msg_type: type_input,
+        retry_interval_in_seconds: _,
     } = expect_one_incoming_edge(g, node_i)?;
 
     // find output queues
@@ -160,6 +193,7 @@ fn generate_fan_out(g: &PetGraph, node_i: NodeIndex, accept_failure: String) -> 
         output_queues,
         accept_failure,
         type_input.clone(),
+        rmq_options.clone(),
     )
 }
 
@@ -168,10 +202,12 @@ fn generate_user_handler(
     node_i: NodeIndex,
     module: String,
     accept_failure: String,
+    rmq_options: RmqOptions,
 ) -> Result<String> {
     let Edge {
         queue: input_queue,
         msg_type: type_input,
+        retry_interval_in_seconds: _,
     } = expect_one_incoming_edge(g, node_i)?;
     let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
     super::user_handler::generate(
@@ -180,6 +216,7 @@ fn generate_user_handler(
         module,
         accept_failure,
         type_input.clone(),
+        rmq_options,
     )
 }
 
@@ -240,4 +277,19 @@ fn map_to_string(old: &PetGraph) -> petgraph::Graph<String, String> {
         |node_index, node| node.name(),
         |edge_index, edge| format!("{}<{}>", edge.queue, edge.msg_type),
     )
+}
+
+fn generate_init_exchanges_and_queues(graph: &PetGraph, rmq_options: RmqOptions) -> Result<String> {
+    let mut all_queues: Vec<_> = graph
+        .edge_weights()
+        .map(|edge|
+            (
+                (&edge.queue).clone(),
+                format!("{}{}{}", &rmq_options.retry_queue_prefix, &edge.queue, &rmq_options.retry_queue_suffix),
+                edge.retry_interval_in_seconds,
+            )
+        ).collect();
+    all_queues.sort();
+    all_queues.dedup();
+    super::init_exchanges_and_queues::generate(rmq_options, all_queues)
 }

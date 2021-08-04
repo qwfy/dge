@@ -1,6 +1,6 @@
 #[macro_export]
 macro_rules! maybe_send_to_next {
-    ($msg:expr, $queue:expr, $channel:expr, $accept_failure_msg:expr, $accept_failure:path) => {{
+    ($msg:expr, $queue:expr, $channel:expr, $accept_failure_msg:expr, $accept_failure:path, $exchange:expr $(,)?) => {{
         use log::debug;
         use log::info;
         use log::warn;
@@ -34,7 +34,7 @@ macro_rules! maybe_send_to_next {
                         Ok(Responsibility::Accept)
                     }
                     Ok(payload) => {
-                        rmq_primitive::publish_delayed(Some($channel), queue, payload).await?;
+                        rmq_primitive::publish($channel, $exchange, queue, payload).await?;
                         Ok(Responsibility::Accept)
                     }
                 }

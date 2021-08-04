@@ -32,7 +32,7 @@ use crate::Result;
 ///
 /// The `handler` can also return `Ok<Responsibility::Reject>` to indicate that
 /// the handler rejects the message,
-/// in this case an RabbitMQ nack will be sent back to the RabbitMQ server,
+/// in this case an RabbitMQ `basic.reject` will be sent back to the RabbitMQ server,
 /// and the message will be redelivered later.
 ///
 /// For convenience, and `Err(_)` is treated largely in a similar way with a rejection,
@@ -44,6 +44,7 @@ use crate::Result;
 ///
 /// If the connection to the RabbitMQ server drops, it will be retried.
 pub async fn consume_forever<InputMsg, HandlerState, HandlerResult>(
+    rmq_uri: &str,
     input_queue: &'static str,
     handler: fn(HandlerState, Channel, InputMsg) -> HandlerResult,
     handler_state: HandlerState,
@@ -55,7 +56,15 @@ pub async fn consume_forever<InputMsg, HandlerState, HandlerResult>(
 {
     loop {
         // establish connection to rmq server and consume the queue
-        match consume_queue(&input_queue, handler, handler_state.clone(), prefetch_count).await {
+        match consume_queue(
+            rmq_uri,
+            &input_queue,
+            handler,
+            handler_state.clone(),
+            prefetch_count,
+        )
+        .await
+        {
             Ok(()) => (),
             Err(e) => {
                 warn!(
@@ -77,6 +86,7 @@ pub async fn consume_forever<InputMsg, HandlerState, HandlerResult>(
 }
 
 async fn consume_queue<InputMsg, HandlerState, HandlerResult>(
+    rmq_uri: &str,
     input_queue: &'static str,
     handler: fn(HandlerState, Channel, InputMsg) -> HandlerResult,
     handler_state: HandlerState,
@@ -89,7 +99,7 @@ where
 {
     // establish communication
     info!("creating channel for consuming queue {}", input_queue);
-    let channel = create_channel().await?;
+    let channel = create_channel(rmq_uri).await?;
     info!("setting prefetch to be {}", prefetch_count);
     channel
         .basic_qos(prefetch_count, BasicQosOptions { global: false })
@@ -153,11 +163,11 @@ async fn handle_one_delivery<InputMsg, HandlerState, HandlerResult>(
                     "an error occurred while handling message {}, will requeue it, error is: {}",
                     &delivery.delivery_tag, e
                 );
-                unreliable_ack_or_reject(channel, AckType::Nack, delivery.delivery_tag).await
+                unreliable_ack_or_reject(channel, AckType::Reject, delivery.delivery_tag).await
             }
             Ok(Responsibility::Reject) => {
                 debug!("explicitly rejecting message {}", &delivery.delivery_tag);
-                unreliable_ack_or_reject(channel, AckType::Nack, delivery.delivery_tag).await
+                unreliable_ack_or_reject(channel, AckType::Reject, delivery.delivery_tag).await
             }
 
             Ok(Responsibility::Accept) => {

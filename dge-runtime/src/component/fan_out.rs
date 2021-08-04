@@ -3,7 +3,8 @@ macro_rules! fan_out {
     (
         state=$state:ident, channel=$channel:ident, msg=$msg:ident,
         accept_failure=$accept_failure:path,
-        output_queues=$output_queues:expr $(,)?
+        output_queues=$output_queues:expr,
+        exchange=$exchange:expr $(,)?
     ) => {
         match serde_json::to_vec(&$msg) {
             Err(serde_error) => {
@@ -25,8 +26,9 @@ macro_rules! fan_out {
                 // this is acceptable, albeit annoying
                 for output_queue in $output_queues {
                     // TODO @incomplete: do not publish delayed
-                    rmq_primitive::publish_delayed(
-                        Some($channel.clone()),
+                    rmq_primitive::publish(
+                        $channel.clone(),
+                        $exchange,
                         output_queue,
                         payload.clone(),
                     )

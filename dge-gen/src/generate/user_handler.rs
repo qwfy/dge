@@ -1,5 +1,6 @@
 use askama::Template;
 
+use super::graph::RmqOptions;
 use super::rust::gen_ident;
 use super::rust::gen_opt_str;
 use super::rust::gen_str;
@@ -18,6 +19,7 @@ struct UserHandlerTemplate {
     input_queue: String,
     prefetch_count: String,
     behaviour_module: String,
+    rmq_options: RmqOptions,
 }
 
 pub(crate) fn generate(
@@ -26,6 +28,7 @@ pub(crate) fn generate(
     behaviour_module: String,
     accept_failure: String,
     type_input: String,
+    rmq_options: RmqOptions,
 ) -> Result<String> {
     let template = UserHandlerTemplate {
         type_input: gen_ident(type_input),
@@ -35,6 +38,7 @@ pub(crate) fn generate(
         // TODO @incomplete: make it configurable
         prefetch_count: gen_u32(1),
         behaviour_module: gen_ident(behaviour_module),
+        rmq_options,
     };
 
     let generated = template.render()?;

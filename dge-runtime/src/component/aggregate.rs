@@ -14,7 +14,8 @@ macro_rules! aggregate {
         state=$state:ident, channel=$channel:ident, msg=$msg:ident,
         aggregate=$aggregate:path,
         accept_failure=$accept_failure:path,
-        output_queue=$output_queue:expr $(,)?
+        output_queue=$output_queue:expr,
+        exchange=$exchange:expr $(,)?
     ) => {
         match $aggregate(&$msg).await {
             Err(user_error) => {
@@ -42,7 +43,8 @@ macro_rules! aggregate {
                     $output_queue,
                     $channel,
                     &$msg,
-                    $accept_failure
+                    $accept_failure,
+                    $exchange,
                 )
             }
         }

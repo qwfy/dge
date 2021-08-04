@@ -52,6 +52,7 @@ impl Node {
 pub(crate) struct Edge {
     pub(crate) queue: String,
     pub(crate) msg_type: String,
+    pub(crate) retry_interval_in_seconds: u32,
 }
 
 /// A computational graph where:
@@ -97,6 +98,7 @@ impl Graph {
         queue: S,
         behaviour_module: S,
         type_input: S,
+        retry_interval_in_seconds: u32,
     ) -> NodeIndex {
         let handler_node = Node::UserHandler {
             name: name.into(),
@@ -106,6 +108,7 @@ impl Graph {
         let edge = Edge {
             queue: queue.into(),
             msg_type: type_input.into(),
+            retry_interval_in_seconds,
         };
         self.g.add_edge(input, handler_node_i, edge);
         handler_node_i
@@ -122,6 +125,7 @@ impl Graph {
         queue: S,
         aggregate: S,
         type_input: S,
+        retry_interval_in_seconds: u32,
     ) -> NodeIndex {
         let type_input = type_input.into();
         let wait_node_i = self.g.add_node(Node::Aggregate {
@@ -136,6 +140,7 @@ impl Graph {
                 Edge {
                     queue: queue.clone(),
                     msg_type: type_input.clone(),
+                    retry_interval_in_seconds,
                 },
             );
         }
@@ -152,6 +157,7 @@ impl Graph {
         input: NodeIndex,
         queue: S,
         type_input: S,
+        retry_interval_in_seconds: u32,
     ) -> NodeIndex {
         let fan_out_i = self.g.add_node(Node::FanOut { name: name.into() });
         self.g.add_edge(
@@ -160,6 +166,7 @@ impl Graph {
             Edge {
                 queue: queue.into(),
                 msg_type: type_input.into(),
+                retry_interval_in_seconds,
             },
         );
 
@@ -167,7 +174,22 @@ impl Graph {
     }
 
     /// Generate code represented by the graph, write the code generated to `output_dir`.
-    pub fn generate<P: AsRef<Path>>(self, output_dir: P) -> Result<()> {
-        generate::graph::generate(self, output_dir)
+    pub fn generate<P: AsRef<Path>, S: Into<String>>(
+        self,
+        output_dir: P,
+        get_rmq_uri: S,
+        work_exchange: S,
+        retry_exchange: S,
+        retry_queue_prefix: S,
+        retry_queue_suffix: S,
+    ) -> Result<()> {
+        let rmq_options = generate::graph::RmqOptions {
+            get_rmq_uri: get_rmq_uri.into(),
+            work_exchange: work_exchange.into(),
+            retry_exchange: retry_exchange.into(),
+            retry_queue_prefix: retry_queue_prefix.into(),
+            retry_queue_suffix: retry_queue_suffix.into(),
+        };
+        generate::graph::generate(self, output_dir, rmq_options)
     }
 }

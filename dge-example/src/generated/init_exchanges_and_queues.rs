@@ -22,38 +22,27 @@ use dge_runtime::Error;
 use dge_runtime::Result;
 
 #[rustfmt::skip]
-#[tokio::main(worker_threads = 2)]
+#[tokio::main]
 pub(crate) async fn main() -> Result<()> {
     let rmq_uri = crate::behaviour::get_rmq_uri();
 
-    let handler_state = crate::behaviour::add_2::init().await;
+    // all queues used in the graph
+    // (work_queue, retry_queue_for_work_queue, retry_interval_in_seconds)
+    let all_queues = vec![
+        ("additions", "pre_additions_post", 13),
+        ("input_msg", "pre_input_msg_post", 10),
+        ("input_msg_copy_1", "pre_input_msg_copy_1_post", 11),
+        ("input_msg_copy_2", "pre_input_msg_copy_2_post", 12),
+    ];
 
-    let () = dge_runtime::rmq::consume_forever(
-        &rmq_uri,
-        "input_msg_copy_2",
-        handler,
-        handler_state,
-        1,
-    ).await;
+    let () = rmq_init::init_exchanges_and_queues(
+        rmq_uri.as_ref(),
+        "some_work_exchange",
+        "some_retry_exchange",
+        all_queues,
+    ).await?;
+
+    println!("all necessary exchanges and queues initialized");
 
     Ok(())
-}
-
-
-#[rustfmt::skip]
-async fn handler(
-    state: crate::behaviour::add_2::State,
-    channel: Channel,
-    msg: i32,
-) -> Result<Responsibility>
-{
-    dge_runtime::user_handler!(
-        state = state,
-        channel = channel,
-        msg = msg,
-        user_handler = crate::behaviour::add_2::handle,
-        accept_failure = crate::behaviour::accept_failure::accept_failure,
-        output_queue = Some("additions"),
-        exchange = "some_work_exchange",
-    )
 }

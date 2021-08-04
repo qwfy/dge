@@ -8,15 +8,20 @@ type HandlerState = ();
 
 #[rustfmt::skip]
 #[tokio::main(worker_threads = 2)]
-pub(crate) async fn main() {
+pub(crate) async fn main() -> Result<()> {
+    let rmq_uri = {{ rmq_options.get_rmq_uri }}();
+
     let handler_state = ();
 
     let () = dge_runtime::rmq::consume_forever(
+        &rmq_uri,
         {{ input_queue }},
         handler,
         handler_state,
         {{ prefetch_count }},
     ).await;
+
+    Ok(())
 }
 
 
@@ -34,5 +39,6 @@ async fn handler(
         aggregate = {{ aggregate }},
         accept_failure = {{ accept_failure }},
         output_queue = {{ output_queue }},
+        exchange = "{{ rmq_options.work_exchange }}",
     )
 }

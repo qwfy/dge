@@ -4,7 +4,8 @@ macro_rules! user_handler {
         state=$state:ident, channel=$channel:ident, msg=$msg:ident,
         user_handler=$user_handler:path,
         accept_failure=$accept_failure:path,
-        output_queue=$output_queue:expr $(,)?
+        output_queue=$output_queue:expr,
+        exchange=$exchange:expr $(,)?
     ) => {
         match $user_handler($state, &$msg).await {
             Err(user_error) => {
@@ -27,7 +28,8 @@ macro_rules! user_handler {
                     $output_queue,
                     $channel,
                     &$msg,
-                    $accept_failure
+                    $accept_failure,
+                    $exchange,
                 )
             }
         }
