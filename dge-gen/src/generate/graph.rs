@@ -32,37 +32,29 @@ pub(crate) fn generate<P: AsRef<Path>>(graph: Graph, dir: P) -> Result<()> {
         match node {
             // start node doesn't need any code
             Node::Start { .. } => (),
-            Node::Aggregate {
-                name,
-                aggregate,
-                type_input,
-            } => {
+            Node::Aggregate { name, aggregate } => {
                 let content = generate_aggregate(
                     g,
                     node_i,
                     aggregate.into(),
                     graph.accept_failure.clone(),
-                    type_input.clone(),
                     graph.type_error.clone(),
                 )?;
                 update_outputs(&mut outputs, dir, name, content);
             }
-            Node::FanOut { name, type_input } => {
-                let content =
-                    generate_fan_out(g, node_i, graph.accept_failure.clone(), type_input.clone())?;
+            Node::FanOut { name } => {
+                let content = generate_fan_out(g, node_i, graph.accept_failure.clone())?;
                 update_outputs(&mut outputs, dir, name, content);
             }
             Node::UserHandler {
                 name,
                 behaviour_module,
-                type_input,
             } => {
                 let content = generate_user_handler(
                     g,
                     node_i,
                     behaviour_module.into(),
                     graph.accept_failure.clone(),
-                    type_input.clone(),
                 )?;
                 update_outputs(&mut outputs, dir, name, content);
             }
@@ -89,10 +81,12 @@ fn generate_aggregate(
     node_i: NodeIndex,
     aggregate: String,
     accept_failure: String,
-    type_input: String,
     type_error: String,
 ) -> Result<String> {
-    let input_queue = expect_one_input_queue_for_aggregation_node(g, node_i)?;
+    let Edge {
+        queue: input_queue,
+        msg_type: type_input,
+    } = expect_one_input_edge_for_aggregation_node(g, node_i)?;
     let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
     super::aggregate::generate(
         input_queue,
@@ -104,13 +98,11 @@ fn generate_aggregate(
     )
 }
 
-fn generate_fan_out(
-    g: &PetGraph,
-    node_i: NodeIndex,
-    accept_failure: String,
-    type_input: String,
-) -> Result<String> {
-    let Edge { queue: input_queue } = expect_one_incoming_edge(g, node_i)?;
+fn generate_fan_out(g: &PetGraph, node_i: NodeIndex, accept_failure: String) -> Result<String> {
+    let Edge {
+        queue: input_queue,
+        msg_type: type_input,
+    } = expect_one_incoming_edge(g, node_i)?;
 
     // find output queues
     // TODO @incomplete: check for duplicate queues
@@ -125,7 +117,7 @@ fn generate_fan_out(
         input_queue.clone(),
         output_queues,
         accept_failure,
-        type_input,
+        type_input.clone(),
     )
 }
 
@@ -134,16 +126,18 @@ fn generate_user_handler(
     node_i: NodeIndex,
     module: String,
     accept_failure: String,
-    type_input: String,
 ) -> Result<String> {
-    let Edge { queue: input_queue } = expect_one_incoming_edge(g, node_i)?;
+    let Edge {
+        queue: input_queue,
+        msg_type: type_input,
+    } = expect_one_incoming_edge(g, node_i)?;
     let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
     super::user_handler::generate(
         input_queue.clone(),
         output_queue,
         module,
         accept_failure,
-        type_input,
+        type_input.clone(),
     )
 }
 
@@ -171,16 +165,15 @@ fn expect_optional_outgoing_edge(g: &PetGraph, i: NodeIndex) -> Result<Option<&E
     }
 }
 
-fn expect_one_input_queue_for_aggregation_node(g: &PetGraph, node_i: NodeIndex) -> Result<String> {
+fn expect_one_input_edge_for_aggregation_node(g: &PetGraph, node_i: NodeIndex) -> Result<Edge> {
     let incoming_edges = g.edges_directed(node_i, Direction::Incoming);
-    let mut queues = HashSet::new();
+    let mut edges = HashSet::new();
     for edge in incoming_edges {
-        let queue = edge.weight().queue.clone();
-        queues.insert(queue);
+        edges.insert(edge.weight().clone());
     }
-    let queues: Vec<_> = queues.into_iter().collect();
-    if queues.len() == 1 {
-        Ok(queues[0].clone())
+    let edges: Vec<_> = edges.into_iter().collect();
+    if edges.len() == 1 {
+        Ok(edges[0].clone())
     } else {
         Err(Error::IllFormedNode {
             node: format!("{:?}", g[node_i]),

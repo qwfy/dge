@@ -18,19 +18,21 @@ use crate::Result;
 #[derive(Clone, Debug)]
 pub(crate) enum Node {
     /// A no-op node that indicates the start of the computation.
-    Start { name: String },
+    Start {
+        name: String,
+    },
     Aggregate {
         name: String,
         aggregate: String,
-        type_input: String,
     },
     /// Duplicate the output of one node to multiple nodes.
-    FanOut { name: String, type_input: String },
+    FanOut {
+        name: String,
+    },
     /// A user-provided handler that transform the input message into the output message.
     UserHandler {
         name: String,
         behaviour_module: String,
-        type_input: String,
     },
 }
 
@@ -46,9 +48,10 @@ impl Node {
 }
 
 /// An edge represents a RabbitMQ queue.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Ord, PartialOrd, PartialEq, Eq, Hash)]
 pub(crate) struct Edge {
     pub(crate) queue: String,
+    pub(crate) msg_type: String,
 }
 
 /// A computational graph where:
@@ -98,11 +101,11 @@ impl Graph {
         let handler_node = Node::UserHandler {
             name: name.into(),
             behaviour_module: behaviour_module.into(),
-            type_input: type_input.into(),
         };
         let handler_node_i = self.g.add_node(handler_node);
         let edge = Edge {
             queue: queue.into(),
+            msg_type: type_input.into(),
         };
         self.g.add_edge(input, handler_node_i, edge);
         handler_node_i
@@ -120,10 +123,10 @@ impl Graph {
         aggregate: S,
         type_input: S,
     ) -> NodeIndex {
+        let type_input = type_input.into();
         let wait_node_i = self.g.add_node(Node::Aggregate {
             name: name.into(),
             aggregate: aggregate.into(),
-            type_input: type_input.into(),
         });
         let queue = queue.into();
         for input_i in inputs {
@@ -132,6 +135,7 @@ impl Graph {
                 wait_node_i,
                 Edge {
                     queue: queue.clone(),
+                    msg_type: type_input.clone(),
                 },
             );
         }
@@ -149,15 +153,13 @@ impl Graph {
         queue: S,
         type_input: S,
     ) -> NodeIndex {
-        let fan_out_i = self.g.add_node(Node::FanOut {
-            name: name.into(),
-            type_input: type_input.into(),
-        });
+        let fan_out_i = self.g.add_node(Node::FanOut { name: name.into() });
         self.g.add_edge(
             input,
             fan_out_i,
             Edge {
                 queue: queue.into(),
+                msg_type: type_input.into(),
             },
         );
 
