@@ -17,4 +17,7 @@ pub enum Error {
 
     #[error("The given file name is not valid: {}", .0)]
     InvalidFileName(String),
+
+    #[error("Failed to generate svg for the dot graph")]
+    ErrorGeneratingSvg,
 }

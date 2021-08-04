@@ -66,7 +66,35 @@ pub(crate) fn generate<P: AsRef<Path>>(graph: Graph, dir: P) -> Result<()> {
     let dot = petgraph::dot::Dot::with_config(&graph_for_display, &[]);
     let dot_file_path = dir.join("graph.dot");
     info!("writing dot graph to {}", &dot_file_path.display());
-    std::fs::write(dot_file_path, format!("{}", dot))?;
+    std::fs::write(&dot_file_path, format!("{}", dot))?;
+    let f = std::fs::OpenOptions::new()
+        .create(false)
+        .read(true)
+        .write(false)
+        .open(&dot_file_path)?
+        .sync_all()?;
+
+    // convert dot to svg
+    let svg_file_path = dir.join("graph.svg");
+    let gen_svg_output = std::process::Command::new("dot")
+        .arg("-Tsvg")
+        .arg(
+            dot_file_path
+                .to_str()
+                .ok_or(Error::InvalidFileName(dot_file_path.display().to_string()))?,
+        )
+        .arg("-o")
+        .arg(
+            svg_file_path
+                .to_str()
+                .ok_or(Error::InvalidFileName(svg_file_path.display().to_string()))?,
+        )
+        .output()?;
+    if gen_svg_output.status.success() {
+        ()
+    } else {
+        return Err(Error::ErrorGeneratingSvg);
+    }
 
     let mut mods = Vec::new();
     // write each file
