@@ -26,7 +26,7 @@ type HandlerState = ();
 #[rustfmt::skip]
 #[tokio::main(worker_threads = 2)]
 pub(crate) async fn main() -> Result<()> {
-    let rmq_uri = crate::behaviour::get_rmq_uri();
+    let rmq_uri = dge_example::behaviour::get_rmq_uri();
 
     let handler_state = ();
 
@@ -53,7 +53,7 @@ async fn handler(
         state = state,
         channel = channel,
         msg = msg,
-        accept_failure = crate::behaviour::accept_failure::accept_failure,
+        accept_failure = dge_example::behaviour::accept_failure::accept_failure,
         output_queues = vec!["input_msg_copy_2","input_msg_copy_1"],
         exchange = "some_work_exchange",
     )

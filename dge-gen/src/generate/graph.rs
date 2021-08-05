@@ -27,11 +27,14 @@ pub(crate) struct RmqOptions {
 pub(crate) fn generate<P: AsRef<Path>>(
     graph: Graph,
     dir: P,
+    strip_prefix: P,
     rmq_options: RmqOptions,
 ) -> Result<()> {
     let g = &graph.g;
-    let mut outputs = HashMap::new();
     let dir = dir.as_ref();
+    let strip_prefix = strip_prefix.as_ref();
+
+    let mut outputs = HashMap::new();
 
     // TODO @incomplete: check the validity of the graph
     // - no cycle
@@ -122,14 +125,14 @@ pub(crate) fn generate<P: AsRef<Path>>(
 
     let mut mods = Vec::new();
     // write each file
-    for (file_path, content) in outputs {
-        info!("writing to {}", &file_path.display());
-        std::fs::write(&file_path, content)?;
+    for (file_path, content) in outputs.iter() {
+        info!("writing to {}", file_path.display());
+        std::fs::write(file_path, content)?;
 
-        match &file_path.file_stem() {
-            None => return Err(Error::InvalidFileName((&file_path).display().to_string())),
+        match file_path.file_stem() {
+            None => return Err(Error::InvalidFileName((file_path).display().to_string())),
             Some(file_stem) => match (*file_stem).to_str() {
-                None => return Err(Error::InvalidFileName((&file_path).display().to_string())),
+                None => return Err(Error::InvalidFileName((file_path).display().to_string())),
                 Some(s) => mods.push(format!("pub(crate) mod {};", s)),
             },
         }
@@ -138,6 +141,8 @@ pub(crate) fn generate<P: AsRef<Path>>(
     // write mod.rs
     let mods: String = mods.join("\n");
     std::fs::write(dir.join("mod.rs"), mods)?;
+
+    generate_cargo(&outputs, strip_prefix)?;
 
     Ok(())
 }
@@ -292,4 +297,34 @@ fn generate_init_exchanges_and_queues(graph: &PetGraph, rmq_options: RmqOptions)
     all_queues.sort();
     all_queues.dedup();
     super::init_exchanges_and_queues::generate(rmq_options, all_queues)
+}
+
+fn generate_cargo<P: AsRef<Path>>(outputs: &HashMap<PathBuf, String>, strip_prefix: P) -> Result<()> {
+    let strip_prefix = strip_prefix.as_ref();
+    for file_path in outputs.keys() {
+        let file_stem = file_path
+            .file_stem()
+            .ok_or(Error::InvalidFileName(file_path.display().to_string()))?
+            .to_str()
+            .ok_or(Error::InvalidFileName(file_path.display().to_string()))?;
+
+        let path_in_cargo = file_path.strip_prefix(strip_prefix)?;
+
+        if file_stem == "mod" {
+            continue
+        }
+
+        println!(
+r#"
+[[bin]]
+name = "{}"
+path = "{}""#,
+        file_stem,
+        path_in_cargo
+            .to_str()
+            .ok_or(Error::InvalidFileName(file_path.display().to_string()))?
+        );
+    }
+
+    Ok(())
 }

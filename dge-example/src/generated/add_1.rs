@@ -24,9 +24,9 @@ use dge_runtime::Result;
 #[rustfmt::skip]
 #[tokio::main(worker_threads = 2)]
 pub(crate) async fn main() -> Result<()> {
-    let rmq_uri = crate::behaviour::get_rmq_uri();
+    let rmq_uri = dge_example::behaviour::get_rmq_uri();
 
-    let handler_state = crate::behaviour::add_1::init().await;
+    let handler_state = dge_example::behaviour::add_1::init().await;
 
     let () = dge_runtime::rmq::consume_forever(
         &rmq_uri,
@@ -42,7 +42,7 @@ pub(crate) async fn main() -> Result<()> {
 
 #[rustfmt::skip]
 async fn handler(
-    state: crate::behaviour::add_1::State,
+    state: dge_example::behaviour::add_1::State,
     channel: Channel,
     msg: i32,
 ) -> Result<Responsibility>
@@ -51,8 +51,8 @@ async fn handler(
         state = state,
         channel = channel,
         msg = msg,
-        user_handler = crate::behaviour::add_1::handle,
-        accept_failure = crate::behaviour::accept_failure::accept_failure,
+        user_handler = dge_example::behaviour::add_1::handle,
+        accept_failure = dge_example::behaviour::accept_failure::accept_failure,
         output_queue = Some("additions"),
         exchange = "some_work_exchange",
     )

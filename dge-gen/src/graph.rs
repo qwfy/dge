@@ -177,6 +177,7 @@ impl Graph {
     pub fn generate<P: AsRef<Path>, S: Into<String>>(
         self,
         output_dir: P,
+        strip_prefix: P,
         get_rmq_uri: S,
         work_exchange: S,
         retry_exchange: S,
@@ -190,6 +191,6 @@ impl Graph {
             retry_queue_prefix: retry_queue_prefix.into(),
             retry_queue_suffix: retry_queue_suffix.into(),
         };
-        generate::graph::generate(self, output_dir, rmq_options)
+        generate::graph::generate(self, output_dir, strip_prefix, rmq_options)
     }
 }

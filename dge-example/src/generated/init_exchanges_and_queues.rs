@@ -24,7 +24,7 @@ use dge_runtime::Result;
 #[rustfmt::skip]
 #[tokio::main]
 pub(crate) async fn main() -> Result<()> {
-    let rmq_uri = crate::behaviour::get_rmq_uri();
+    let rmq_uri = dge_example::behaviour::get_rmq_uri();
 
     // all queues used in the graph
     // (work_queue, retry_queue_for_work_queue, retry_interval_in_seconds)

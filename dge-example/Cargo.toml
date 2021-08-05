@@ -21,5 +21,21 @@ name = "generate_code"
 path = "src/main_generate_code.rs"
 
 [[bin]]
-name = "use_generated"
-path = "src/main_use_generated.rs"
+name = "wait_additions"
+path = "src/generated/wait_additions.rs"
+
+[[bin]]
+name = "init_exchanges_and_queues"
+path = "src/generated/init_exchanges_and_queues.rs"
+
+[[bin]]
+name = "add_2"
+path = "src/generated/add_2.rs"
+
+[[bin]]
+name = "add_1"
+path = "src/generated/add_1.rs"
+
+[[bin]]
+name = "duplicate_input_msg"
+path = "src/generated/duplicate_input_msg.rs"
