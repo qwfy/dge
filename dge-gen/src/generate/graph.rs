@@ -24,9 +24,10 @@ pub(crate) struct RmqOptions {
 }
 
 /// Generate codes corresponding the graph.
-pub(crate) fn generate<P: AsRef<Path>>(
+pub(crate) fn generate<P: AsRef<Path>, S: AsRef<str>>(
     graph: Graph,
     dir: P,
+    binary_prefix: S,
     strip_prefix: P,
     rmq_options: RmqOptions,
 ) -> Result<()> {
@@ -142,7 +143,7 @@ pub(crate) fn generate<P: AsRef<Path>>(
     let mods: String = mods.join("\n");
     std::fs::write(dir.join("mod.rs"), mods)?;
 
-    generate_cargo(&outputs, strip_prefix)?;
+    generate_cargo(&outputs, binary_prefix, strip_prefix)?;
 
     Ok(())
 }
@@ -299,7 +300,8 @@ fn generate_init_exchanges_and_queues(graph: &PetGraph, rmq_options: RmqOptions)
     super::init_exchanges_and_queues::generate(rmq_options, all_queues)
 }
 
-fn generate_cargo<P: AsRef<Path>>(outputs: &HashMap<PathBuf, String>, strip_prefix: P) -> Result<()> {
+fn generate_cargo<P: AsRef<Path>, S: AsRef<str>>(outputs: &HashMap<PathBuf, String>, binary_prefix: S, strip_prefix: P) -> Result<()> {
+    let binary_prefix = binary_prefix.as_ref();
     let strip_prefix = strip_prefix.as_ref();
     for file_path in outputs.keys() {
         let file_stem = file_path
@@ -317,12 +319,13 @@ fn generate_cargo<P: AsRef<Path>>(outputs: &HashMap<PathBuf, String>, strip_pref
         println!(
 r#"
 [[bin]]
-name = "{}"
+name = "{}{}"
 path = "{}""#,
-        file_stem,
-        path_in_cargo
-            .to_str()
-            .ok_or(Error::InvalidFileName(file_path.display().to_string()))?
+            binary_prefix,
+            file_stem,
+            path_in_cargo
+                .to_str()
+                .ok_or(Error::InvalidFileName(file_path.display().to_string()))?
         );
     }
 

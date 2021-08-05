@@ -174,9 +174,10 @@ impl Graph {
     }
 
     /// Generate code represented by the graph, write the code generated to `output_dir`.
-    pub fn generate<P: AsRef<Path>, S: Into<String>>(
+    pub fn generate<P: AsRef<Path>, S: AsRef<str>>(
         self,
         output_dir: P,
+        binary_prefix: S,
         strip_prefix: P,
         get_rmq_uri: S,
         work_exchange: S,
@@ -185,12 +186,12 @@ impl Graph {
         retry_queue_suffix: S,
     ) -> Result<()> {
         let rmq_options = generate::graph::RmqOptions {
-            get_rmq_uri: get_rmq_uri.into(),
-            work_exchange: work_exchange.into(),
-            retry_exchange: retry_exchange.into(),
-            retry_queue_prefix: retry_queue_prefix.into(),
-            retry_queue_suffix: retry_queue_suffix.into(),
+            get_rmq_uri: get_rmq_uri.as_ref().into(),
+            work_exchange: work_exchange.as_ref().into(),
+            retry_exchange: retry_exchange.as_ref().into(),
+            retry_queue_prefix: retry_queue_prefix.as_ref().into(),
+            retry_queue_suffix: retry_queue_suffix.as_ref().into(),
         };
-        generate::graph::generate(self, output_dir, strip_prefix, rmq_options)
+        generate::graph::generate(self, output_dir, binary_prefix, strip_prefix, rmq_options)
     }
 }

@@ -35,6 +35,7 @@ fn main() {
     graph
         .generate(
             "dge-example/src/generated",
+            "",
             "dge-example/",
             "dge_example::behaviour::get_rmq_uri",
             "some_work_exchange",
