@@ -26,11 +26,9 @@ pub(crate) struct RmqOptions {
 }
 
 /// Generate codes corresponding the graph.
-pub(crate) fn generate<P: AsRef<Path>, S: AsRef<str>>(
+pub(crate) fn generate<P: AsRef<Path>>(
     graph: Graph,
     dir: P,
-    binary_prefix: S,
-    strip_prefix: Option<&Path>,
     rmq_options: RmqOptions,
 ) -> Result<()> {
     let g = &graph.g;
@@ -92,6 +90,9 @@ pub(crate) fn generate<P: AsRef<Path>, S: AsRef<str>>(
     let content = generate_init_exchanges_and_queues(g, rmq_options.clone())?;
     update_outputs(&mut outputs, dir, "init_exchanges_and_queues", content);
 
+    let content = generate_main(&outputs)?;
+    update_outputs(&mut outputs, dir, "main", content);
+
     // write the graph in dot format
     let graph_for_display = map_to_string(g);
     let dot = petgraph::dot::Dot::with_config(&graph_for_display, &[]);
@@ -141,12 +142,6 @@ pub(crate) fn generate<P: AsRef<Path>, S: AsRef<str>>(
             },
         }
     }
-
-    // write mod.rs
-    let mods: String = mods.join("\n");
-    std::fs::write(dir.join("mod.rs"), mods)?;
-
-    generate_cargo(&outputs, binary_prefix, strip_prefix)?;
 
     Ok(())
 }
@@ -305,8 +300,8 @@ fn generate_init_exchanges_and_queues(graph: &PetGraph, rmq_options: RmqOptions)
     super::init_exchanges_and_queues::generate(rmq_options, all_queues)
 }
 
-fn generate_cargo<S: AsRef<str>>(outputs: &HashMap<PathBuf, String>, binary_prefix: S, strip_prefix: Option<&Path>) -> Result<()> {
-    let binary_prefix = binary_prefix.as_ref();
+fn generate_main(outputs: &HashMap<PathBuf, String>) -> Result<String> {
+    let mut modules = Vec::new();
     for file_path in outputs.keys() {
         let file_stem = file_path
             .file_stem()
@@ -314,28 +309,12 @@ fn generate_cargo<S: AsRef<str>>(outputs: &HashMap<PathBuf, String>, binary_pref
             .to_str()
             .ok_or(Error::InvalidFileName(file_path.display().to_string()))?;
 
-
-        let path_in_cargo = match strip_prefix {
-            None => file_path,
-            Some(strip_prefix) => file_path.strip_prefix(strip_prefix)?
-        };
-
-        if file_stem == "mod" {
+        if file_stem == "main" {
             continue
         }
 
-        println!(
-r#"
-[[bin]]
-name = "{}{}"
-path = "{}""#,
-            binary_prefix,
-            file_stem,
-            path_in_cargo
-                .to_str()
-                .ok_or(Error::InvalidFileName(file_path.display().to_string()))?
-        );
+        modules.push(String::from(file_stem));
     }
 
-    Ok(())
+    super::main::generate(modules)
 }

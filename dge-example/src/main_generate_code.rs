@@ -37,8 +37,6 @@ fn main() {
     graph
         .generate(
             "dge-example/src/generated",
-            "",
-            Some("dge-example/".as_ref()),
             "dge_example::behaviour::get_rmq_uri",
             "some_work_exchange",
             "some_retry_exchange",
