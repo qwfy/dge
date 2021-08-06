@@ -14,6 +14,7 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json;
 
+#[allow(unused_imports)]
 use dge_runtime;
 use dge_runtime::rmq_init;
 use dge_runtime::rmq_primitive;
@@ -46,7 +47,7 @@ pub(crate) async fn main() -> Result<()> {
 async fn handler(
     _state: HandlerState,
     channel: Channel,
-    msg: i32,
+    msg: dge_example::behaviour::data::Integer,
 ) -> Result<Responsibility>
 {
     dge_runtime::fan_out!(

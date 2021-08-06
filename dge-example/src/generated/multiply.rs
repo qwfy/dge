@@ -14,6 +14,7 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json;
 
+#[allow(unused_imports)]
 use dge_runtime;
 use dge_runtime::rmq_init;
 use dge_runtime::rmq_primitive;
@@ -23,14 +24,12 @@ use dge_runtime::Result;
 
 use dge_runtime::component::aggregate::AggregationStatus;
 
-type HandlerState = ();
-
 #[rustfmt::skip]
 #[tokio::main(worker_threads = 2)]
 pub(crate) async fn main() -> Result<()> {
     let rmq_uri = dge_example::behaviour::get_rmq_uri();
 
-    let handler_state = dge_example::behaviour::multiply::multiply::init().await;
+    let handler_state = dge_example::behaviour::multiply::init().await;
 
     let () = dge_runtime::rmq::consume_forever(
         &rmq_uri,
@@ -46,16 +45,16 @@ pub(crate) async fn main() -> Result<()> {
 
 #[rustfmt::skip]
 async fn handler(
-    state: HandlerState,
+    state: dge_example::behaviour::multiply::State,
     channel: Channel,
-    msg: i32,
+    msg: dge_example::behaviour::data::Integer,
 ) -> Result<Responsibility>
 {
     dge_runtime::aggregate!(
         state = state,
         channel = channel,
         msg = msg,
-        aggregate = dge_example::behaviour::multiply::multiply::aggregate,
+        aggregate = dge_example::behaviour::multiply::aggregate,
         accept_failure = dge_example::behaviour::accept_failure::accept_failure,
         output_queue = Some("result"),
         exchange = "dge_example_work_exchange",

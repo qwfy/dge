@@ -1,11 +1,9 @@
 /// Status of merging multiple messages into one `Aggregated`
 pub enum AggregationStatus<Aggregated> {
     /// The merge is incomplete, need more incoming messages.
-    Partial,
+    Ignore,
     /// For the first time, the multiple input messages are merged into one.
-    FreshAggregation(Aggregated),
-    /// The incoming messages are already merged previously.
-    AlreadyAggregated,
+    Aggregated(Aggregated),
 }
 
 #[macro_export]
@@ -29,15 +27,10 @@ macro_rules! aggregate {
                 // reject the message to retry
                 Ok(Responsibility::Reject)
             }
-            Ok(AggregationStatus::Partial) => {
-                // messages is not merged yet
+            Ok(AggregationStatus::Ignore) => {
                 Ok(Responsibility::Accept)
             }
-            Ok(AggregationStatus::AlreadyAggregated) => {
-                // messages is not merged yet
-                Ok(Responsibility::Accept)
-            }
-            Ok(AggregationStatus::FreshAggregation(merged_msg)) => {
+            Ok(AggregationStatus::Aggregated(merged_msg)) => {
                 $crate::maybe_send_to_next!(
                     &merged_msg,
                     $output_queue,

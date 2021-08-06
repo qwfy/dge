@@ -4,8 +4,6 @@
 
 use dge_runtime::component::aggregate::AggregationStatus;
 
-type HandlerState = ();
-
 #[rustfmt::skip]
 #[tokio::main(worker_threads = 2)]
 pub(crate) async fn main() -> Result<()> {
@@ -27,7 +25,7 @@ pub(crate) async fn main() -> Result<()> {
 
 #[rustfmt::skip]
 async fn handler(
-    state: HandlerState,
+    state: {{ behaviour_module }}::State,
     channel: Channel,
     msg: {{ type_input }},
 ) -> Result<Responsibility>

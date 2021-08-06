@@ -6,11 +6,11 @@ fn main() {
         "dge_example::behaviour::error::Error",
     );
     let start = graph.start("start");
-    let fan_out = graph.fan_out(start, "input", "i32", "duplicate_input", 10);
+    let fan_out = graph.fan_out(start, "input", "dge_example::behaviour::data::Integer", "duplicate_input", 10);
     let double = graph.process(
         fan_out,
         "input_copy_1".into(),
-        "i32",
+        "dge_example::behaviour::data::Integer",
         "double",
         "dge_example::behaviour::double".into(),
         11,
@@ -18,7 +18,7 @@ fn main() {
     let square = graph.process(
         fan_out,
         "input_copy_2".into(),
-        "i32",
+        "dge_example::behaviour::data::Integer",
         "square",
         "dge_example::behaviour::square".into(),
         12,
@@ -26,16 +26,16 @@ fn main() {
     let multiply = graph.aggregate(
         vec![double, square],
         "multiply".into(),
-        "i32",
+        "dge_example::behaviour::data::Integer",
         "multiply",
-        "dge_example::behaviour::multiply::multiply".into(),
+        "dge_example::behaviour::multiply".into(),
         13,
     );
 
     let () = graph.terminate(
         multiply,
         "result",
-        "f32",
+        "dge_example::behaviour::data::Float",
         "terminate",
         1
     );

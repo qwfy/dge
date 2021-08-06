@@ -8,7 +8,7 @@ use super::error::Error;
 use super::data::Integer;
 use super::data::Float;
 
-type State = Arc<Mutex<HashMap<String, Phase>>>;
+pub type State = Arc<Mutex<HashMap<String, Phase>>>;
 
 pub async fn init() -> State {
     let state = HashMap::new();
@@ -30,18 +30,18 @@ pub async fn aggregate(state: State, msg: &Integer) -> Result<AggregationStatus<
     let status = match v {
         None => {
             state.insert(msg.msg_id.clone(), Phase::HaveOneNumber(msg.integer.clone()));
-            AggregationStatus::Partial
+            AggregationStatus::Ignore
+        },
+        Some(Phase::HaveTwoNumber(_, _)) => {
+            AggregationStatus::Ignore
         },
         Some(Phase::HaveOneNumber(existing)) => {
             state.insert(msg.msg_id.clone(), Phase::HaveTwoNumber(existing, msg.integer.clone()));
-            AggregationStatus::FreshAggregation(Float {
+            AggregationStatus::Aggregated(Float {
                 msg_id: msg.msg_id.clone(),
                 // since this is an example, we just unwrap it
                 float: (existing * msg.integer) as f32,
             })
-        },
-        Some(Phase::HaveTwoNumber(_, _)) => {
-            AggregationStatus::AlreadyAggregated
         },
     };
 
