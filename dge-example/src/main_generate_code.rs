@@ -6,7 +6,13 @@ fn main() {
         "dge_example::behaviour::error::Error",
     );
     let start = graph.start("start");
-    let fan_out = graph.fan_out(start, "input", "dge_example::behaviour::data::Integer", "duplicate_input", 10);
+    let fan_out = graph.fan_out(
+        start,
+        "input",
+        "dge_example::behaviour::data::Integer",
+        "duplicate_input",
+        10
+    );
     let double = graph.process(
         fan_out,
         "input_copy_1".into(),
