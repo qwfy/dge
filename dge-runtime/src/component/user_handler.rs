@@ -27,7 +27,7 @@ macro_rules! user_handler {
                     &out_msg,
                     $output_queue,
                     $channel,
-                    &$msg,
+                    (&$msg).into(),
                     $accept_failure,
                     $exchange,
                 )
