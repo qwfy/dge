@@ -14,6 +14,8 @@ use crate::graph::PetGraph;
 use crate::Error;
 use crate::Result;
 
+use crate::misc;
+
 #[derive(Clone)]
 pub(crate) struct RmqOptions {
     pub(crate) get_rmq_uri: String,
@@ -280,9 +282,11 @@ fn update_outputs<P: AsRef<Path>, S: AsRef<str>>(
 }
 
 fn map_to_string(old: &PetGraph) -> petgraph::Graph<String, String> {
+    let all_msg_types: Vec<String> = old.edge_weights().map(|e| e.msg_type.clone()).collect();
+    let msg_prefix = misc::longest_common_prefix(all_msg_types);
     old.map(
         |node_index, node| node.name(),
-        |edge_index, edge| format!("{}<{}>", edge.queue, edge.msg_type),
+        |edge_index, edge| format!("{}<{}>", edge.queue, edge.msg_type.trim_start_matches(&msg_prefix)),
     )
 }
 
