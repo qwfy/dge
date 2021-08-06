@@ -281,7 +281,7 @@ fn map_to_string(old: &PetGraph) -> petgraph::Graph<String, String> {
     let msg_prefix = misc::longest_common_prefix(all_msg_types);
     old.map(
         |node_index, node| node.name(),
-        |edge_index, edge| format!("{}<{}>", edge.queue, edge.msg_type.trim_start_matches(&msg_prefix)),
+        |edge_index, edge| format!("{}\n{}", edge.queue, edge.msg_type.trim_start_matches(&msg_prefix)),
     )
 }
 
