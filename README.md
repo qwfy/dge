@@ -8,19 +8,20 @@ Conceptually:
   and generate the corresponding codes (that use `dge-runtime` as a dependency)
   to execute the graph
   
-- The nodes in the graph represent computations
+- The nodes in the graph represent heterogeneous computations
 
 - The edges represent data flow between nodes
 
-- The computational graph is static, meaning it cannot be changed at runtime
+- The computational graph is static, meaning it cannot be changed once defined
   
 - The execution is distributed, meaning the nodes can be executed on different machines
 
-Implementation:
+Concretely:
 
-- You define the graph via `dge-gen` in a `.rs` file, compile & run it to generate the code
+- You define the graph via `dge-gen` in a `.rs` file,
+  compile & run it to generate the codes (including `main.rs`) that will be used to execute the graph
 
-- A `main.rs` is generated to be compiled to an executable binary,
+- You compile the `main.rs` to an executable binary,
   each subcommand in this binary corresponds to a node in the graph.
 
 - You are responsible to launch the binary with appropriate subcommands.
@@ -37,7 +38,7 @@ The following graph corresponds to the computation `(2 * x) * (x * x)`:
 
 ![](dge-example/src/generated/graph.svg)
 
-and can be generated with the `dge-example/src/main_generate_code.rs`, here is a snippet of it:
+and is generated with code in `dge-example/src/main_generate_code.rs`, here is a snippet of it:
 
 ```rust
 use dge_gen;
@@ -55,15 +56,7 @@ fn main() {
         "duplicate_input",
         10
     );
-    let double = graph.process(
-        fan_out,
-        "input_copy_1".into(),
-        "dge_example::behaviour::data::Integer",
-        "double",
-        "dge_example::behaviour::double".into(),
-        11,
-    );
- 
+
     // ... some code omitted for brevity ...
 
     graph
