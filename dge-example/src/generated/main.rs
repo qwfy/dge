@@ -9,20 +9,20 @@ use structopt::StructOpt;
 use dge_runtime::Result;
 
 // these are the codes for each node
-mod add_1;
-mod add_2;
+mod double;
 mod duplicate_input;
 mod init_exchanges_and_queues;
-mod wait_additions;
+mod multiply;
+mod square;
 
 #[rustfmt::skip]
 #[derive(Debug, StructOpt)]
 enum Command {
-    Add1,
-    Add2,
+    Double,
     DuplicateInput,
     InitExchangesAndQueues,
-    WaitAdditions,
+    Multiply,
+    Square,
 }
 
 #[rustfmt::skip]
@@ -30,10 +30,10 @@ fn main() -> Result<()> {
     let command = Command::from_args();
 
     match command {
-        Command::Add1 => add_1::main(),
-        Command::Add2 => add_2::main(),
+        Command::Double => double::main(),
         Command::DuplicateInput => duplicate_input::main(),
         Command::InitExchangesAndQueues => init_exchanges_and_queues::main(),
-        Command::WaitAdditions => wait_additions::main(),
+        Command::Multiply => multiply::main(),
+        Command::Square => square::main(),
     }
 }

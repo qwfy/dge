@@ -29,17 +29,17 @@ pub(crate) async fn main() -> Result<()> {
     // all queues used in the graph
     // (work_queue, retry_queue_for_work_queue, retry_interval_in_seconds)
     let all_queues = vec![
-        ("additions", "pre_additions_post", 13),
-        ("input", "pre_input_post", 10),
-        ("input_copy_1", "pre_input_copy_1_post", 11),
-        ("input_copy_2", "pre_input_copy_2_post", 12),
-        ("some_output_queue", "pre_some_output_queue_post", 1),
+        ("input", "retry_input", 10),
+        ("input_copy_1", "retry_input_copy_1", 11),
+        ("input_copy_2", "retry_input_copy_2", 12),
+        ("multiply", "retry_multiply", 13),
+        ("result", "retry_result", 1),
     ];
 
     let () = rmq_init::init_exchanges_and_queues(
         rmq_uri.as_ref(),
-        "some_work_exchange",
-        "some_retry_exchange",
+        "dge_example_work_exchange",
+        "dge_example_retry_exchange",
         all_queues,
     ).await?;
 

@@ -26,7 +26,7 @@ use dge_runtime::Result;
 pub(crate) async fn main() -> Result<()> {
     let rmq_uri = dge_example::behaviour::get_rmq_uri();
 
-    let handler_state = dge_example::behaviour::add_1::init().await;
+    let handler_state = dge_example::behaviour::double::init().await;
 
     let () = dge_runtime::rmq::consume_forever(
         &rmq_uri,
@@ -42,7 +42,7 @@ pub(crate) async fn main() -> Result<()> {
 
 #[rustfmt::skip]
 async fn handler(
-    state: dge_example::behaviour::add_1::State,
+    state: dge_example::behaviour::double::State,
     channel: Channel,
     msg: i32,
 ) -> Result<Responsibility>
@@ -51,9 +51,9 @@ async fn handler(
         state = state,
         channel = channel,
         msg = msg,
-        user_handler = dge_example::behaviour::add_1::handle,
+        user_handler = dge_example::behaviour::double::handle,
         accept_failure = dge_example::behaviour::accept_failure::accept_failure,
-        output_queue = Some("additions"),
-        exchange = "some_work_exchange",
+        output_queue = Some("multiply"),
+        exchange = "dge_example_work_exchange",
     )
 }

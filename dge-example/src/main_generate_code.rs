@@ -7,35 +7,35 @@ fn main() {
     );
     let start = graph.start("start");
     let fan_out = graph.fan_out(start, "input", "i32", "duplicate_input", 10);
-    let add_1 = graph.process(
+    let double = graph.process(
         fan_out,
         "input_copy_1".into(),
         "i32",
-        "add_1",
-        "dge_example::behaviour::add_1".into(),
+        "double",
+        "dge_example::behaviour::double".into(),
         11,
     );
-    let add_2 = graph.process(
+    let square = graph.process(
         fan_out,
         "input_copy_2".into(),
         "i32",
-        "add_2",
-        "dge_example::behaviour::add_2".into(),
+        "square",
+        "dge_example::behaviour::square".into(),
         12,
     );
-    let wait_all = graph.aggregate(
-        vec![add_1, add_2],
-        "additions".into(),
+    let multiply = graph.aggregate(
+        vec![double, square],
+        "multiply".into(),
         "i32",
-        "wait_additions",
-        "dge_example::behaviour::merge_additions::merge".into(),
+        "multiply",
+        "dge_example::behaviour::multiply::multiply".into(),
         13,
     );
 
     let () = graph.terminate(
-        wait_all,
-        "some_output_queue",
-        "String",
+        multiply,
+        "result",
+        "f32",
         "terminate",
         1
     );
@@ -44,10 +44,10 @@ fn main() {
         .generate(
             "dge-example/src/generated",
             "dge_example::behaviour::get_rmq_uri",
-            "some_work_exchange",
-            "some_retry_exchange",
-            "pre_",
-            "_post",
+            "dge_example_work_exchange",
+            "dge_example_retry_exchange",
+            "retry_",
+            "",
         )
         .unwrap()
 }

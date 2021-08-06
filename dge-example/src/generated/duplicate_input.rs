@@ -55,6 +55,6 @@ async fn handler(
         msg = msg,
         accept_failure = dge_example::behaviour::accept_failure::accept_failure,
         output_queues = vec!["input_copy_2","input_copy_1"],
-        exchange = "some_work_exchange",
+        exchange = "dge_example_work_exchange",
     )
 }

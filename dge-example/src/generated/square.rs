@@ -21,20 +21,16 @@ use dge_runtime::rmq_primitive::Responsibility;
 use dge_runtime::Error;
 use dge_runtime::Result;
 
-use dge_runtime::component::aggregate::AggregationStatus;
-
-type HandlerState = ();
-
 #[rustfmt::skip]
 #[tokio::main(worker_threads = 2)]
 pub(crate) async fn main() -> Result<()> {
     let rmq_uri = dge_example::behaviour::get_rmq_uri();
 
-    let handler_state = ();
+    let handler_state = dge_example::behaviour::square::init().await;
 
     let () = dge_runtime::rmq::consume_forever(
         &rmq_uri,
-        "additions",
+        "input_copy_2",
         handler,
         handler_state,
         1,
@@ -46,18 +42,18 @@ pub(crate) async fn main() -> Result<()> {
 
 #[rustfmt::skip]
 async fn handler(
-    _state: HandlerState,
+    state: dge_example::behaviour::square::State,
     channel: Channel,
     msg: i32,
 ) -> Result<Responsibility>
 {
-    dge_runtime::aggregate!(
+    dge_runtime::user_handler!(
         state = state,
         channel = channel,
         msg = msg,
-        aggregate = dge_example::behaviour::merge_additions::merge,
+        user_handler = dge_example::behaviour::square::handle,
         accept_failure = dge_example::behaviour::accept_failure::accept_failure,
-        output_queue = Some("some_output_queue"),
-        exchange = "some_work_exchange",
+        output_queue = Some("multiply"),
+        exchange = "dge_example_work_exchange",
     )
 }
