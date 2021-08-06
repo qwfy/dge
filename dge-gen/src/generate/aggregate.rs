@@ -2,20 +2,15 @@ use askama::Template;
 
 use super::graph::RmqOptions;
 use super::rust::gen_ident;
-use super::rust::gen_opt_string;
 use super::rust::gen_opt_str;
 use super::rust::gen_str;
-use super::rust::gen_string;
 use super::rust::gen_u32;
-use super::rust::gen_vec_string;
-use crate::Error;
 use crate::Result;
 
 #[derive(Template)]
 #[template(path = "aggregate.rs", escape = "none")]
 struct AggregateTemplate {
     type_input: String,
-    type_error: String,
     aggregate: String,
     accept_failure: String,
     output_queue: String,
@@ -30,7 +25,6 @@ pub(crate) fn generate(
     output_queue: Option<String>,
     accept_failure: String,
     type_input: String,
-    type_error: String,
     rmq_options: RmqOptions,
 ) -> Result<String> {
     let template = AggregateTemplate {
@@ -41,7 +35,6 @@ pub(crate) fn generate(
         // TODO @incomplete: make it configurable
         prefetch_count: gen_u32(1),
         type_input: gen_ident(type_input),
-        type_error: gen_ident(type_error),
         rmq_options,
     };
 

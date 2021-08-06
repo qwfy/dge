@@ -1,4 +1,4 @@
-use log::{debug, info, warn};
+use log::info;
 use petgraph::Direction;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -6,7 +6,6 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use crate::graph::Edge;
-use crate::graph::EdgeIndex;
 use crate::graph::Graph;
 use crate::graph::Node;
 use crate::graph::NodeIndex;
@@ -56,7 +55,6 @@ pub(crate) fn generate<P: AsRef<Path>>(
                     node_i,
                     aggregate.into(),
                     graph.accept_failure.clone(),
-                    graph.type_error.clone(),
                     rmq_options.clone(),
                 )?;
                 update_outputs(&mut outputs, dir, name, content);
@@ -156,7 +154,6 @@ fn generate_aggregate(
     node_i: NodeIndex,
     aggregate: String,
     accept_failure: String,
-    type_error: String,
     rmq_options: RmqOptions,
 ) -> Result<String> {
     let Edge {
@@ -171,7 +168,6 @@ fn generate_aggregate(
         output_queue,
         accept_failure,
         type_input,
-        type_error,
         rmq_options,
     )
 }

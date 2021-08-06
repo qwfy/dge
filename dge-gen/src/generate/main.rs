@@ -1,7 +1,6 @@
 use askama::Template;
 use heck::CamelCase;
 
-use crate::Error;
 use crate::Result;
 
 struct Command {

@@ -1,12 +1,9 @@
-use lapin::options::BasicQosOptions;
 use lapin::Channel;
 use lapin::Connection;
 use lapin::ConnectionProperties;
 use log::debug;
 use log::info;
 use log::warn;
-use serde::de::DeserializeOwned;
-use std::future::Future;
 use tokio_amqp::*;
 
 use crate::Error;

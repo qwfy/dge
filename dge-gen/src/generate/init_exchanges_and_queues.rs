@@ -1,7 +1,6 @@
 use askama::Template;
 
 use super::graph::RmqOptions;
-use crate::Error;
 use crate::Result;
 
 

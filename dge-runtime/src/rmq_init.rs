@@ -5,7 +5,6 @@ use lapin::types::LongString;
 use lapin::types::ShortString;
 use log::info;
 
-use crate::Error;
 use crate::Result;
 
 use crate::rmq_primitive;

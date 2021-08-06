@@ -1,13 +1,10 @@
 use futures::Future;
 use lapin::options::BasicQosOptions;
 use lapin::Channel;
-use lapin::Connection;
-use lapin::ConnectionProperties;
 use log::debug;
 use log::info;
 use log::warn;
 use serde::de::DeserializeOwned;
-use serde::Serialize;
 use serde_json;
 
 use super::rmq_primitive::constant::*;
@@ -15,7 +12,6 @@ use super::rmq_primitive::create_channel;
 use super::rmq_primitive::unreliable_ack_or_reject;
 use super::rmq_primitive::AckType;
 use super::rmq_primitive::Responsibility;
-use crate::Error;
 use crate::Result;
 
 /// Read a message of type `InputMsg` from `input_queue`, and process it with `handler`.
