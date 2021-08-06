@@ -49,6 +49,8 @@ pub(crate) fn generate<P: AsRef<Path>, S: AsRef<str>>(
         match node {
             // start node doesn't need any code
             Node::Start { .. } => (),
+            // terminate node doesn't need any code
+            Node::Terminate { .. } => (),
             Node::Aggregate { name, aggregate } => {
                 let content = generate_aggregate(
                     g,

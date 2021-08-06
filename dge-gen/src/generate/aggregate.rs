@@ -3,6 +3,7 @@ use askama::Template;
 use super::graph::RmqOptions;
 use super::rust::gen_ident;
 use super::rust::gen_opt_string;
+use super::rust::gen_opt_str;
 use super::rust::gen_str;
 use super::rust::gen_string;
 use super::rust::gen_u32;
@@ -35,7 +36,7 @@ pub(crate) fn generate(
     let template = AggregateTemplate {
         aggregate: gen_ident(aggregate),
         accept_failure: gen_ident(accept_failure),
-        output_queue: gen_opt_string(output_queue),
+        output_queue: gen_opt_str(output_queue),
         input_queue: gen_str(input_queue),
         // TODO @incomplete: make it configurable
         prefetch_count: gen_u32(1),

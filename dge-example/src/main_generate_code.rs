@@ -32,6 +32,8 @@ fn main() {
         13,
     );
 
+    let () = graph.terminate("terminate", wait_all, "some_output_queue", "String", 1);
+
     graph
         .generate(
             "dge-example/src/generated",

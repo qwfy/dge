@@ -21,6 +21,9 @@ pub(crate) enum Node {
     Start {
         name: String,
     },
+    Terminate {
+        name: String,
+    },
     Aggregate {
         name: String,
         aggregate: String,
@@ -40,6 +43,7 @@ impl Node {
     pub(crate) fn name(&self) -> String {
         match self {
             Node::Start { name, .. } => name.clone(),
+            Node::Terminate { name, .. } => name.clone(),
             Node::Aggregate { name, .. } => name.clone(),
             Node::FanOut { name, .. } => name.clone(),
             Node::UserHandler { name, .. } => name.clone(),
@@ -82,6 +86,15 @@ impl Graph {
     /// Return a handle to the start node.
     pub fn start<S: Into<String>>(&mut self, name: S) -> NodeIndex {
         self.g.add_node(Node::Start { name: name.into() })
+    }
+
+    pub fn terminate<S: Into<String>>(&mut self, name: S, input: NodeIndex, queue: S, type_input: S, retry_interval_in_seconds: u32) -> () {
+        let terminate_node = self.g.add_node(Node::Terminate { name: name.into() });
+        self.g.add_edge(input, terminate_node, Edge {
+            queue: queue.into(),
+            msg_type: type_input.into(),
+            retry_interval_in_seconds
+        });
     }
 
     /// Reads the output of the `input` node from the RabbitMQ queue `queue`
