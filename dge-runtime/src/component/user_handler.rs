@@ -11,11 +11,11 @@ macro_rules! user_handler {
             Err(user_error) => {
                 // TODO @incomplete: for now treat user error as final, this should be recosnidered
                 warn!(
-                    "failed to process message: {}, error is: {}",
+                    "failed to process message: {:?}, error is: {}",
                     &$msg, &user_error
                 );
                 let () =
-                    $accept_failure(&$msg, user_error)
+                    $accept_failure((&$msg).into(), user_error)
                         .await
                         .map_err(|ue| Error::UserError {
                             error: ue.to_string(),

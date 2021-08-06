@@ -23,7 +23,7 @@ macro_rules! aggregate {
                 // since this may be a transient error (i.e. db op), we retry it.
                 // this behaviour is strictly for convenience
                 warn!(
-                    "failed to merge messages for {}, error is: {}, will be retried",
+                    "failed to merge messages for {:?}, error is: {}, will be retried",
                     &$msg, user_error
                 );
                 // reject the message to retry

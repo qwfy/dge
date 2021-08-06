@@ -9,7 +9,6 @@ use log::warn;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_json;
-use std::fmt::Display;
 
 use super::rmq_primitive::constant::*;
 use super::rmq_primitive::create_channel;
