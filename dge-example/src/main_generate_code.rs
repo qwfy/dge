@@ -38,7 +38,7 @@ fn main() {
         .generate(
             "dge-example/src/generated",
             "",
-            "dge-example/",
+            Some("dge-example/".as_ref()),
             "dge_example::behaviour::get_rmq_uri",
             "some_work_exchange",
             "some_retry_exchange",

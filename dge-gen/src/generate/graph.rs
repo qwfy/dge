@@ -28,12 +28,11 @@ pub(crate) fn generate<P: AsRef<Path>, S: AsRef<str>>(
     graph: Graph,
     dir: P,
     binary_prefix: S,
-    strip_prefix: P,
+    strip_prefix: Option<&Path>,
     rmq_options: RmqOptions,
 ) -> Result<()> {
     let g = &graph.g;
     let dir = dir.as_ref();
-    let strip_prefix = strip_prefix.as_ref();
 
     let mut outputs = HashMap::new();
 
@@ -302,9 +301,8 @@ fn generate_init_exchanges_and_queues(graph: &PetGraph, rmq_options: RmqOptions)
     super::init_exchanges_and_queues::generate(rmq_options, all_queues)
 }
 
-fn generate_cargo<P: AsRef<Path>, S: AsRef<str>>(outputs: &HashMap<PathBuf, String>, binary_prefix: S, strip_prefix: P) -> Result<()> {
+fn generate_cargo<S: AsRef<str>>(outputs: &HashMap<PathBuf, String>, binary_prefix: S, strip_prefix: Option<&Path>) -> Result<()> {
     let binary_prefix = binary_prefix.as_ref();
-    let strip_prefix = strip_prefix.as_ref();
     for file_path in outputs.keys() {
         let file_stem = file_path
             .file_stem()
@@ -312,7 +310,11 @@ fn generate_cargo<P: AsRef<Path>, S: AsRef<str>>(outputs: &HashMap<PathBuf, Stri
             .to_str()
             .ok_or(Error::InvalidFileName(file_path.display().to_string()))?;
 
-        let path_in_cargo = file_path.strip_prefix(strip_prefix)?;
+
+        let path_in_cargo = match strip_prefix {
+            None => file_path,
+            Some(strip_prefix) => file_path.strip_prefix(strip_prefix)?
+        };
 
         if file_stem == "mod" {
             continue

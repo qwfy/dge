@@ -46,7 +46,7 @@ pub async fn init_work_queue<S: AsRef<str>>(
     let channel = rmq_primitive::create_channel(rmq_uri).await?;
 
     let exchanges: [&str; 2] = [work_direct_exchange, retry_direct_exchange];
-    for exchange in exchanges.into_iter() {
+    for exchange in exchanges.iter() {
         info!("declaring exchange {}", exchange);
         channel
             .exchange_declare(

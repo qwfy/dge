@@ -191,7 +191,7 @@ impl Graph {
         self,
         output_dir: P,
         binary_prefix: S,
-        strip_prefix: P,
+        strip_prefix: Option<&Path>,
         get_rmq_uri: S,
         work_exchange: S,
         retry_exchange: S,
