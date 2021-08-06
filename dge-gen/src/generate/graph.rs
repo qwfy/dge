@@ -95,7 +95,12 @@ pub(crate) fn generate<P: AsRef<Path>>(
 
     // write the graph in dot format
     let graph_for_display = map_to_string(g);
-    let dot = petgraph::dot::Dot::with_config(&graph_for_display, &[]);
+    let dot = petgraph::dot::Dot::with_attr_getters(
+        &graph_for_display,
+        &[],
+        &|_, _| String::from(r#"arrowhead = "onormal""#),
+        &|_, _| String::from(r#"shape = "box" style = "rounded""#)
+    );
     let dot_file_path = dir.join("graph.dot");
     info!("writing dot graph to {}", &dot_file_path.display());
     std::fs::write(&dot_file_path, format!("{}", dot))?;
