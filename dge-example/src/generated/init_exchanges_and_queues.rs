@@ -30,9 +30,9 @@ pub(crate) async fn main() -> Result<()> {
     // (work_queue, retry_queue_for_work_queue, retry_interval_in_seconds)
     let all_queues = vec![
         ("additions", "pre_additions_post", 13),
-        ("input_msg", "pre_input_msg_post", 10),
-        ("input_msg_copy_1", "pre_input_msg_copy_1_post", 11),
-        ("input_msg_copy_2", "pre_input_msg_copy_2_post", 12),
+        ("input", "pre_input_post", 10),
+        ("input_copy_1", "pre_input_copy_1_post", 11),
+        ("input_copy_2", "pre_input_copy_2_post", 12),
         ("some_output_queue", "pre_some_output_queue_post", 1),
     ];
 

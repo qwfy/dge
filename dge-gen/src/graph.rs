@@ -88,7 +88,7 @@ impl Graph {
         self.g.add_node(Node::Start { name: name.into() })
     }
 
-    pub fn terminate<S: Into<String>>(&mut self, name: S, input: NodeIndex, queue: S, type_input: S, retry_interval_in_seconds: u32) -> () {
+    pub fn terminate<S: Into<String>>(&mut self, input: NodeIndex, queue: S, type_input: S, name: S, retry_interval_in_seconds: u32) -> () {
         let terminate_node = self.g.add_node(Node::Terminate { name: name.into() });
         self.g.add_edge(input, terminate_node, Edge {
             queue: queue.into(),
@@ -106,11 +106,11 @@ impl Graph {
     /// and a new edge from `input` to `handler` representing the underlying RabbitMQ queue `queue`.
     pub fn process<S: Into<String>>(
         &mut self,
-        name: S,
         input: NodeIndex,
         queue: S,
-        behaviour_module: S,
         type_input: S,
+        name: S,
+        behaviour_module: S,
         retry_interval_in_seconds: u32,
     ) -> NodeIndex {
         let handler_node = Node::UserHandler {
@@ -133,11 +133,11 @@ impl Graph {
     /// Return a handle to the newly added node.
     pub fn aggregate<S: Into<String>>(
         &mut self,
-        name: S,
         inputs: Vec<NodeIndex>,
         queue: S,
-        aggregate: S,
         type_input: S,
+        name: S,
+        aggregate: S,
         retry_interval_in_seconds: u32,
     ) -> NodeIndex {
         let type_input = type_input.into();
@@ -166,10 +166,10 @@ impl Graph {
     /// Return a handle to the newly created node
     pub fn fan_out<S: Into<String>>(
         &mut self,
-        name: S,
         input: NodeIndex,
         queue: S,
         type_input: S,
+        name: S,
         retry_interval_in_seconds: u32,
     ) -> NodeIndex {
         let fan_out_i = self.g.add_node(Node::FanOut { name: name.into() });

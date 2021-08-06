@@ -11,7 +11,7 @@ use dge_runtime::Result;
 // these are the codes for each node
 mod add_1;
 mod add_2;
-mod duplicate_input_msg;
+mod duplicate_input;
 mod init_exchanges_and_queues;
 mod wait_additions;
 
@@ -20,7 +20,7 @@ mod wait_additions;
 enum Command {
     Add1,
     Add2,
-    DuplicateInputMsg,
+    DuplicateInput,
     InitExchangesAndQueues,
     WaitAdditions,
 }
@@ -32,7 +32,7 @@ fn main() -> Result<()> {
     match command {
         Command::Add1 => add_1::main(),
         Command::Add2 => add_2::main(),
-        Command::DuplicateInputMsg => duplicate_input_msg::main(),
+        Command::DuplicateInput => duplicate_input::main(),
         Command::InitExchangesAndQueues => init_exchanges_and_queues::main(),
         Command::WaitAdditions => wait_additions::main(),
     }

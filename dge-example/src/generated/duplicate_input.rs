@@ -32,7 +32,7 @@ pub(crate) async fn main() -> Result<()> {
 
     let () = dge_runtime::rmq::consume_forever(
         &rmq_uri,
-        "input_msg",
+        "input",
         handler,
         handler_state,
         1,
@@ -54,7 +54,7 @@ async fn handler(
         channel = channel,
         msg = msg,
         accept_failure = dge_example::behaviour::accept_failure::accept_failure,
-        output_queues = vec!["input_msg_copy_2","input_msg_copy_1"],
+        output_queues = vec!["input_copy_2","input_copy_1"],
         exchange = "some_work_exchange",
     )
 }

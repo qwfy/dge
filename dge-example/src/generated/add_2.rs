@@ -30,7 +30,7 @@ pub(crate) async fn main() -> Result<()> {
 
     let () = dge_runtime::rmq::consume_forever(
         &rmq_uri,
-        "input_msg_copy_2",
+        "input_copy_2",
         handler,
         handler_state,
         1,
