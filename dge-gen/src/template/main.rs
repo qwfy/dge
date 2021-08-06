@@ -3,14 +3,15 @@
 use structopt::StructOpt;
 use dge_runtime::Result;
 
-{% for command in commands %}
+// these are the codes for each node
+{%- for command in commands %}
 mod {{ command.module }};
 {%- endfor %}
 
 #[rustfmt::skip]
 #[derive(Debug, StructOpt)]
 enum Command {
-    {% for command in commands %}
+    {%- for command in commands %}
     {{ command.variant }},
     {%- endfor %}
 }
@@ -20,7 +21,7 @@ fn main() -> Result<()> {
     let command = Command::from_args();
 
     match command {
-        {% for command in commands %}
+        {%- for command in commands %}
         Command::{{ command.variant }} => {{ command.module }}::main(),
         {%- endfor %}
     }

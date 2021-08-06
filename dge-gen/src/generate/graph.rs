@@ -316,5 +316,7 @@ fn generate_main(outputs: &HashMap<PathBuf, String>) -> Result<String> {
         modules.push(String::from(file_stem));
     }
 
+    modules.sort();
+
     super::main::generate(modules)
 }
