@@ -49,11 +49,11 @@ pub(crate) fn generate<P: AsRef<Path>>(
             Node::Start { .. } => (),
             // terminate node doesn't need any code
             Node::Terminate { .. } => (),
-            Node::Aggregate { name, aggregate } => {
+            Node::Aggregate { name, behaviour_module } => {
                 let content = generate_aggregate(
                     g,
                     node_i,
-                    aggregate.into(),
+                    behaviour_module.into(),
                     graph.accept_failure.clone(),
                     rmq_options.clone(),
                 )?;
@@ -152,7 +152,7 @@ pub(crate) fn generate<P: AsRef<Path>>(
 fn generate_aggregate(
     g: &PetGraph,
     node_i: NodeIndex,
-    aggregate: String,
+    behaviour_module: String,
     accept_failure: String,
     rmq_options: RmqOptions,
 ) -> Result<String> {
@@ -164,7 +164,7 @@ fn generate_aggregate(
     let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
     super::aggregate::generate(
         input_queue,
-        aggregate,
+        behaviour_module,
         output_queue,
         accept_failure,
         type_input,

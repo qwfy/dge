@@ -30,7 +30,7 @@ type HandlerState = ();
 pub(crate) async fn main() -> Result<()> {
     let rmq_uri = dge_example::behaviour::get_rmq_uri();
 
-    let handler_state = ();
+    let handler_state = dge_example::behaviour::multiply::multiply::init().await;
 
     let () = dge_runtime::rmq::consume_forever(
         &rmq_uri,
@@ -46,7 +46,7 @@ pub(crate) async fn main() -> Result<()> {
 
 #[rustfmt::skip]
 async fn handler(
-    _state: HandlerState,
+    state: HandlerState,
     channel: Channel,
     msg: i32,
 ) -> Result<Responsibility>
@@ -55,7 +55,7 @@ async fn handler(
         state = state,
         channel = channel,
         msg = msg,
-        aggregate = dge_example::behaviour::multiply::multiply,
+        aggregate = dge_example::behaviour::multiply::multiply::aggregate,
         accept_failure = dge_example::behaviour::accept_failure::accept_failure,
         output_queue = Some("result"),
         exchange = "dge_example_work_exchange",

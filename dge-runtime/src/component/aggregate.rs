@@ -17,7 +17,7 @@ macro_rules! aggregate {
         output_queue=$output_queue:expr,
         exchange=$exchange:expr $(,)?
     ) => {
-        match $aggregate(&$msg).await {
+        match $aggregate($state, &$msg).await {
             Err(user_error) => {
                 // user handler returned error,
                 // since this may be a transient error (i.e. db op), we retry it.

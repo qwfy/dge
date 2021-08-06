@@ -1,6 +1,49 @@
-use super::error::Error;
+use std::collections::HashMap;
+use std::sync::Arc;
+use std::sync::Mutex;
+
 use dge_runtime::component::aggregate::AggregationStatus;
 
-pub async fn multiply(input: &i32) -> Result<AggregationStatus<f32>, Error> {
-    Ok(AggregationStatus::FreshAggregation(1.0))
+use super::error::Error;
+use super::data::Integer;
+use super::data::Float;
+
+type State = Arc<Mutex<HashMap<String, Phase>>>;
+
+pub async fn init() -> State {
+    let state = HashMap::new();
+    Arc::new(Mutex::new(state))
+}
+
+#[derive(Clone)]
+pub enum Phase {
+    HaveOneNumber(i32),
+    HaveTwoNumber(i32, i32)
+}
+
+pub async fn aggregate(state: State, msg: &Integer) -> Result<AggregationStatus<Float>, Error> {
+    let mut state = state.lock().unwrap();
+    let v = match state.get(&msg.msg_id) {
+        None => None,
+        Some(x) => Some(x.clone())
+    };
+    let status = match v {
+        None => {
+            state.insert(msg.msg_id.clone(), Phase::HaveOneNumber(msg.integer.clone()));
+            AggregationStatus::Partial
+        },
+        Some(Phase::HaveOneNumber(existing)) => {
+            state.insert(msg.msg_id.clone(), Phase::HaveTwoNumber(existing, msg.integer.clone()));
+            AggregationStatus::FreshAggregation(Float {
+                msg_id: msg.msg_id.clone(),
+                // since this is an example, we just unwrap it
+                float: (existing * msg.integer) as f32,
+            })
+        },
+        Some(Phase::HaveTwoNumber(_, _)) => {
+            AggregationStatus::AlreadyAggregated
+        },
+    };
+
+    Ok(status)
 }

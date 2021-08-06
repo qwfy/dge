@@ -25,7 +25,7 @@ pub(crate) enum Node {
     },
     Aggregate {
         name: String,
-        aggregate: String,
+        behaviour_module: String,
     },
     /// Duplicate the output of one node to multiple nodes.
     FanOut {
@@ -136,13 +136,13 @@ impl Graph {
         queue: S,
         type_input: S,
         name: S,
-        aggregate: S,
+        behaviour_module: S,
         retry_interval_in_seconds: u32,
     ) -> NodeIndex {
         let type_input = type_input.into();
         let wait_node_i = self.g.add_node(Node::Aggregate {
             name: name.into(),
-            aggregate: aggregate.into(),
+            behaviour_module: behaviour_module.into(),
         });
         let queue = queue.into();
         for input_i in inputs {

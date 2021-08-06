@@ -11,7 +11,7 @@ use crate::Result;
 #[template(path = "aggregate.rs", escape = "none")]
 struct AggregateTemplate {
     type_input: String,
-    aggregate: String,
+    behaviour_module: String,
     accept_failure: String,
     output_queue: String,
     input_queue: String,
@@ -21,14 +21,14 @@ struct AggregateTemplate {
 
 pub(crate) fn generate(
     input_queue: String,
-    aggregate: String,
+    behaviour_module: String,
     output_queue: Option<String>,
     accept_failure: String,
     type_input: String,
     rmq_options: RmqOptions,
 ) -> Result<String> {
     let template = AggregateTemplate {
-        aggregate: gen_ident(aggregate),
+        behaviour_module: gen_ident(behaviour_module),
         accept_failure: gen_ident(accept_failure),
         output_queue: gen_opt_str(output_queue),
         input_queue: gen_str(input_queue),
