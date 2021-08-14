@@ -32,6 +32,9 @@ Concretely:
   
 - Each edge is backed by exactly one RabbitMQ queue, the nodes are consumers of this queue
 
+- At-least-once delivery is used, meaning that the business code your wrote for the node
+  should be able to handle duplicate messages
+
 ## An example
 
 The following graph corresponds to the computation `(2 * x) * (x * x)`:
