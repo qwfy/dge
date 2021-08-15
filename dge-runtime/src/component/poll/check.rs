@@ -18,19 +18,20 @@ use crate::rmq_primitive;
 use super::data::*;
 
 
-pub async fn poll_forever<InputMsg, OutputMsg, UserError, CheckResult, AcceptFailureResult>(
+pub async fn poll_forever<InputMsg, OutputMsg, UserError, Context, CheckResult, AcceptFailureResult>(
     capacity: Capacity,
     jobs: Jobs<InputMsg>,
 
     // these are used when do the actual checking
     check: fn(InputMsg) -> CheckResult,
-    accept_failure: fn(InputMsg, UserError) -> AcceptFailureResult,
+    accept_failure: fn(Context, UserError) -> AcceptFailureResult,
     get_rmq_uri: fn() -> String,
     work_exchange: &'static str,
     output_queue: Option<&'static str>,
 )
     where
         InputMsg: Clone + Display + Send + Sync + 'static,
+        Context: From<InputMsg> + Send + 'static,
         OutputMsg: Serialize + Send + 'static,
         UserError: From<serde_json::Error> + Display + Send + 'static,
         CheckResult: Future<Output=Result<Option<OutputMsg>, UserError>> + Send + 'static,
@@ -61,20 +62,21 @@ pub async fn poll_forever<InputMsg, OutputMsg, UserError, CheckResult, AcceptFai
     }
 }
 
-async fn sweep_once<InputMsg, OutputMsg, UserError, CheckResult, AcceptFailureResult>(
+async fn sweep_once<InputMsg, OutputMsg, UserError, Context, CheckResult, AcceptFailureResult>(
     capacity: Capacity,
     jobs: Jobs<InputMsg>,
     slots: Arc<Semaphore>,
 
     // these are used when do the actual checking
     check: fn(InputMsg) -> CheckResult,
-    accept_failure: fn(InputMsg, UserError) -> AcceptFailureResult,
+    accept_failure: fn(Context, UserError) -> AcceptFailureResult,
     get_rmq_uri: fn() -> String,
     work_exchange: &'static str,
     output_queue: Option<&'static str>,
 ) -> u32
     where
         InputMsg: Clone + Display + Send + Sync + 'static,
+        Context: From<InputMsg> + Send + 'static,
         OutputMsg: Serialize + Send + 'static,
         UserError: From<serde_json::Error> + Display + Send + 'static,
         CheckResult: Future<Output=Result<Option<OutputMsg>, UserError>> + Send + 'static,
@@ -151,7 +153,7 @@ enum JobStatus {
     NoUpForDispatch,
 }
 
-async fn schedule_one<InputMsg, OutputMsg, UserError, CheckResult, AcceptFailureResult>(
+async fn schedule_one<InputMsg, OutputMsg, UserError, Context, CheckResult, AcceptFailureResult>(
     capacity: Capacity,
     job: Arc<RwLock<Job<InputMsg>>>,
     slot: OwnedSemaphorePermit,
@@ -159,13 +161,14 @@ async fn schedule_one<InputMsg, OutputMsg, UserError, CheckResult, AcceptFailure
 
     // these are used when do the actual checking
     check: fn(InputMsg) -> CheckResult,
-    accept_failure: fn(InputMsg, UserError) -> AcceptFailureResult,
+    accept_failure: fn(Context, UserError) -> AcceptFailureResult,
     get_rmq_uri: fn() -> String,
     work_exchange: &'static str,
     output_queue: Option<&'static str>,
 ) -> (JobStatus, u32)
     where
         InputMsg: Clone + Display + Send + Sync + 'static,
+        Context: From<InputMsg> + Send + 'static,
         OutputMsg: Serialize + Send + 'static,
         UserError: From<serde_json::Error> + Display + Send + 'static,
         CheckResult: Future<Output=Result<Option<OutputMsg>, UserError>> + Send + 'static,
@@ -234,7 +237,7 @@ macro_rules! return_on_failure {
 
                 let mut write_job = $job.write().await;
                 if !write_job.done {
-                    match $accept_failure($input_msg, user_error).await {
+                    match $accept_failure($input_msg.into(), user_error).await {
                         Ok(()) => {
                             // failure accepted, mark the job as done
                             info!("failure for {} accepted, marking the job to be done", &msg_for_logging);
@@ -259,20 +262,21 @@ macro_rules! return_on_failure {
     }};
 }
 
-async fn do_check<InputMsg, OutputMsg, UserError, CheckResult, AcceptFailureResult>(
+async fn do_check<InputMsg, OutputMsg, UserError, Context, CheckResult, AcceptFailureResult>(
     job: Arc<RwLock<Job<InputMsg>>>,
     slot: OwnedSemaphorePermit,
     ticket: OwnedSemaphorePermit,
 
     // these are used when do the actual checking
     check: fn(InputMsg) -> CheckResult,
-    accept_failure: fn(InputMsg, UserError) -> AcceptFailureResult,
+    accept_failure: fn(Context, UserError) -> AcceptFailureResult,
     get_rmq_uri: fn() -> String,
     work_exchange: &'static str,
     output_queue: Option<&'static str>,
 )
     where
         InputMsg: Clone + Display + Send + Sync + 'static,
+        Context: From<InputMsg> + Send + 'static,
         OutputMsg: Serialize + Send + 'static,
         UserError: From<serde_json::Error> + Display + Send + 'static,
         CheckResult: Future<Output=Result<Option<OutputMsg>, UserError>> + Send + 'static,
