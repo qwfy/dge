@@ -19,3 +19,4 @@ log = "0.4"
 lapin = "1.7.1"
 tokio-amqp = "1.0.0"
 thiserror = "1.0.24"
+chrono = { version = "0.4", features = ["serde"] }
