@@ -69,7 +69,7 @@ pub async fn unreliable_ack_or_reject(
 
 pub async fn create_channel<S: AsRef<str>>(rmq_uri: S) -> Result<Channel> {
     let rmq_uri = rmq_uri.as_ref();
-    info!("creating connection and channel channel");
+    info!("creating connection and channel");
     let conn = Connection::connect(rmq_uri, ConnectionProperties::default().with_tokio()).await?;
 
     let channel = conn.create_channel().await?;
