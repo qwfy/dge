@@ -62,6 +62,8 @@ fn main() {
             "dge_example_retry_exchange",
             "retry_",
             "",
+            true,
+            true,
         )
         .unwrap()
 }

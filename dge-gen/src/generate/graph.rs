@@ -29,6 +29,8 @@ pub(crate) fn generate<P: AsRef<Path>>(
     graph: Graph,
     dir: P,
     rmq_options: RmqOptions,
+    init_input_queue: bool,
+    init_output_queue: bool,
 ) -> Result<()> {
     let g = &graph.g;
     let dir = dir.as_ref();
@@ -98,7 +100,12 @@ pub(crate) fn generate<P: AsRef<Path>>(
     }
 
     // generate queue declarations
-    let content = generate_init_exchanges_and_queues(g, rmq_options.clone())?;
+    let content = generate_init_exchanges_and_queues(
+        g,
+        rmq_options.clone(),
+        init_input_queue,
+        init_output_queue,
+    )?;
     update_outputs(&mut outputs, dir, "init_exchanges_and_queues", content);
 
     let content = generate_main(&outputs)?;
@@ -323,7 +330,7 @@ fn map_to_string(old: &PetGraph) -> petgraph::Graph<String, String> {
     )
 }
 
-fn generate_init_exchanges_and_queues(graph: &PetGraph, rmq_options: RmqOptions) -> Result<String> {
+fn generate_init_exchanges_and_queues(graph: &PetGraph, rmq_options: RmqOptions, init_input_queue: bool, init_output_queue: bool) -> Result<String> {
     let mut all_queues: Vec<_> = graph
         .edge_weights()
         .map(|edge|
@@ -333,9 +340,51 @@ fn generate_init_exchanges_and_queues(graph: &PetGraph, rmq_options: RmqOptions)
                 edge.retry_interval_in_seconds,
             )
         ).collect();
-    all_queues.sort();
-    all_queues.dedup();
-    super::init_exchanges_and_queues::generate(rmq_options, all_queues)
+    let mut input_queues = {
+        let mut qs = Vec::new();
+        for node_i in graph.node_indices() {
+            let node = &graph[node_i];
+            match node {
+                Node::Start {..} => {
+                    let edge = expect_optional_outgoing_edge(graph, node_i)?
+                        .ok_or(Error::IllFormedNode {node: format!("{:?}", node)})?;
+                    qs.push(edge.queue.clone());
+                },
+                Node::Aggregate {..} | Node::FanOut {..} | Node::UserHandler{..} | Node::Poll {..} | Node::Terminate {..} => ()
+            }
+        }
+        qs
+    };
+    let mut output_queues = {
+        let mut qs = Vec::new();
+        for node_i in graph.node_indices() {
+            let node = &graph[node_i];
+            match node {
+                Node::Terminate {..} => {
+                    let edge = expect_one_incoming_edge(graph, node_i)?;
+                    qs.push(edge.queue.clone());
+                },
+                Node::Aggregate {..} | Node::FanOut {..} | Node::UserHandler{..} | Node::Poll {..} | Node::Start {..} => ()
+            }
+        }
+        qs
+    };
+    let mut unwanted_queues = Vec::new();
+    if !init_input_queue {
+        unwanted_queues.append(&mut input_queues);
+    }
+    if !init_output_queue {
+        unwanted_queues.append(&mut output_queues);
+    }
+    let mut wanted_queues = Vec::new();
+    for q in all_queues {
+        if !unwanted_queues.contains(&q.0) {
+            wanted_queues.push(q);
+        }
+    }
+    wanted_queues.sort();
+    wanted_queues.dedup();
+    super::init_exchanges_and_queues::generate(rmq_options, wanted_queues)
 }
 
 fn generate_main(outputs: &HashMap<PathBuf, String>) -> Result<String> {

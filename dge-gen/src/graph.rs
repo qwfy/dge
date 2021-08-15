@@ -223,6 +223,8 @@ impl Graph {
         retry_exchange: S,
         retry_queue_prefix: S,
         retry_queue_suffix: S,
+        init_input_queue: bool,
+        init_output_queue: bool,
     ) -> Result<()> {
         let rmq_options = generate::graph::RmqOptions {
             get_rmq_uri: get_rmq_uri.as_ref().into(),
@@ -231,6 +233,6 @@ impl Graph {
             retry_queue_prefix: retry_queue_prefix.as_ref().into(),
             retry_queue_suffix: retry_queue_suffix.as_ref().into(),
         };
-        generate::graph::generate(self, output_dir, rmq_options)
+        generate::graph::generate(self, output_dir, rmq_options, init_input_queue, init_output_queue)
     }
 }
