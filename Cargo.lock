@@ -325,8 +325,10 @@ dependencies = [
 name = "dge-example"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "dge-gen",
  "dge-runtime",
+ "fern",
  "lapin",
  "log",
  "serde",

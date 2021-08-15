@@ -22,9 +22,14 @@ use dge_runtime::rmq_primitive::Responsibility;
 use dge_runtime::Error;
 use dge_runtime::Result;
 
+use fern;
+use chrono;
+
 #[rustfmt::skip]
 #[tokio::main]
 pub(crate) async fn main() -> Result<()> {
+    setup_logger();
+
     let rmq_uri = dge_example::behaviour::get_rmq_uri();
 
     // all queues used in the graph
@@ -45,7 +50,25 @@ pub(crate) async fn main() -> Result<()> {
         all_queues,
     ).await?;
 
-    println!("all necessary exchanges and queues initialized");
+    info!("all necessary exchanges and queues initialized");
 
     Ok(())
+}
+
+#[rustfmt::skip]
+fn setup_logger() {
+    fern::Dispatch::new()
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "{} [{}] [{}] {}",
+                chrono::Local::now().format("[%Y-%m-%d] [%H:%M:%S]"),
+                record.target(),
+                record.level(),
+                message
+            ))
+        })
+        .level(log::LevelFilter::Info)
+        .chain(std::io::stdout())
+        .apply()
+        .unwrap();
 }
