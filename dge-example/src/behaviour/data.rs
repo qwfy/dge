@@ -13,19 +13,19 @@ pub struct Float {
     pub float: f32,
 }
 
-pub enum ErrorContext {
+pub enum Context {
     OfInteger(Integer),
     OfFloat(Float),
 }
 
-impl From<&Integer> for ErrorContext {
-    fn from(x: &Integer) -> ErrorContext {
-        ErrorContext::OfInteger(x.clone())
+impl From<&Integer> for Context {
+    fn from(x: &Integer) -> Context {
+        Context::OfInteger(x.clone())
     }
 }
 
-impl From<&Float> for ErrorContext {
-    fn from(x: &Float) -> ErrorContext {
-        ErrorContext::OfFloat(x.clone())
+impl From<&Float> for Context {
+    fn from(x: &Float) -> Context {
+        Context::OfFloat(x.clone())
     }
 }

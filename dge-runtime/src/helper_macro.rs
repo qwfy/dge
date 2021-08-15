@@ -1,6 +1,6 @@
 #[macro_export]
 macro_rules! maybe_send_to_next {
-    ($msg:expr, $queue:expr, $channel:expr, $error_context:expr, $accept_failure:path, $exchange:expr $(,)?) => {{
+    ($msg:expr, $queue:expr, $channel:expr, $context:expr, $accept_failure:path, $exchange:expr $(,)?) => {{
         // type annotation
         let queue: Option<&str> = $queue;
 
@@ -14,7 +14,7 @@ macro_rules! maybe_send_to_next {
                 match serde_json::to_vec($msg) {
                     Err(serde_error) => {
                         // serialization error is final
-                        let () = $accept_failure($error_context, serde_error.into())
+                        let () = $accept_failure($context, serde_error.into())
                             .await
                             .map_err(|ue| Error::UserError {
                                 error: ue.to_string(),
