@@ -2,6 +2,9 @@
 
 {% include "part_common_import.rs" %}
 
+use std::collections::VecDeque;
+use std::sync::Arc;
+use tokio::sync::RwLock;
 use dge_runtime::component::poll::Jobs;
 use dge_runtime::component::poll::new_job;
 use dge_runtime::component::poll::add_to_jobs;
@@ -10,10 +13,8 @@ use dge_runtime::component::poll::poll_forever;
 #[rustfmt::skip]
 #[tokio::main(worker_threads = 10)]
 pub(crate) async fn main() -> Result<()> {
-    let jobs = Arc::new(RwLock::new(VecDeque::new()));
-
     // load existing jobs
-    load_jobs(jobs.clone()).await?;
+    let jobs = load_jobs().await?;
 
     // start a thread to poll the jobs
     tokio::spawn(poll_forever(
@@ -40,18 +41,21 @@ pub(crate) async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn load_jobs<InputMsg>(jobs: Jobs<InputMsg>) -> Result<()> {
-    let mut jobs = jobs.write().await;
+async fn load_jobs() -> Result<Jobs<{{ type_input }}>> {
+    let jobs = Arc::new(RwLock::new(VecDeque::new()));
+
+    let write_jobs = jobs.clone();
+    let mut write_jobs = write_jobs.write().await;
 
     info!("loading messages");
-    let msgs: Vec<InputMsg> = {{ behaviour_module }}::init().await;
+    let msgs = {{ behaviour_module }}::init().await;
 
     info!("loaded {} messages, adding them to the job queue", msgs.len());
     for msg in msgs {
         let job = new_job(msg);
-        jobs.push_back(job);
+        write_jobs.push_back(job);
     }
     info!("jobs added to the job queue");
 
-    Ok(())
+    Ok(jobs)
 }

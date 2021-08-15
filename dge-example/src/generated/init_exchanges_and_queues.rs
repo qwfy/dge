@@ -34,6 +34,7 @@ pub(crate) async fn main() -> Result<()> {
         ("input_copy_1", "retry_input_copy_1", 11),
         ("input_copy_2", "retry_input_copy_2", 12),
         ("multiply", "retry_multiply", 13),
+        ("rest_call", "retry_rest_call", 13),
         ("result", "retry_result", 1),
     ];
 

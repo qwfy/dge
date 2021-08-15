@@ -1,5 +1,5 @@
 use std::collections::VecDeque;
-use std::fmt::Display;
+use std::fmt::Debug;
 use std::future::Future;
 use std::hash::Hash;
 use std::sync::Arc;
@@ -30,10 +30,10 @@ pub async fn poll_forever<InputMsg, OutputMsg, UserError, Context, CheckResult, 
     output_queue: Option<&'static str>,
 )
     where
-        InputMsg: Clone + Display + Send + Sync + 'static,
+        InputMsg: Clone + Debug + Send + Sync + 'static,
         Context: From<InputMsg> + Send + 'static,
         OutputMsg: Serialize + Send + 'static,
-        UserError: From<serde_json::Error> + Display + Send + 'static,
+        UserError: From<serde_json::Error> + Debug + Send + 'static,
         CheckResult: Future<Output=Result<Option<OutputMsg>, UserError>> + Send + 'static,
         AcceptFailureResult: Future<Output=Result<(), UserError>> + Send + 'static,
 {
@@ -75,10 +75,10 @@ async fn sweep_once<InputMsg, OutputMsg, UserError, Context, CheckResult, Accept
     output_queue: Option<&'static str>,
 ) -> u32
     where
-        InputMsg: Clone + Display + Send + Sync + 'static,
+        InputMsg: Clone + Debug + Send + Sync + 'static,
         Context: From<InputMsg> + Send + 'static,
         OutputMsg: Serialize + Send + 'static,
-        UserError: From<serde_json::Error> + Display + Send + 'static,
+        UserError: From<serde_json::Error> + Debug + Send + 'static,
         CheckResult: Future<Output=Result<Option<OutputMsg>, UserError>> + Send + 'static,
         AcceptFailureResult: Future<Output=Result<(), UserError>> + Send + 'static,
 {
@@ -167,10 +167,10 @@ async fn schedule_one<InputMsg, OutputMsg, UserError, Context, CheckResult, Acce
     output_queue: Option<&'static str>,
 ) -> (JobStatus, u32)
     where
-        InputMsg: Clone + Display + Send + Sync + 'static,
+        InputMsg: Clone + Debug + Send + Sync + 'static,
         Context: From<InputMsg> + Send + 'static,
         OutputMsg: Serialize + Send + 'static,
-        UserError: From<serde_json::Error> + Display + Send + 'static,
+        UserError: From<serde_json::Error> + Debug + Send + 'static,
         CheckResult: Future<Output=Result<Option<OutputMsg>, UserError>> + Send + 'static,
         AcceptFailureResult: Future<Output=Result<(), UserError>> + Send + 'static,
 {
@@ -180,19 +180,19 @@ async fn schedule_one<InputMsg, OutputMsg, UserError, Context, CheckResult, Acce
     let mut sleep_time = sleep_time;
 
     if job.done {
-        debug!("job for message {} is done", &job.msg);
+        debug!("job for message {:?} is done", &job.msg);
         (JobStatus::JobDone, sleep_time)
     } else {
         match job.ticket.clone().try_acquire_owned() {
             Err(_) => {
-                debug!("skip dispatching job for {}, for there is one already running", &job.msg);
+                debug!("skip dispatching job for {:?}, for there is one already running", &job.msg);
                 (JobStatus::AlreadyRunning, sleep_time)
             }
             Ok(ticket) => {
                 let now = chrono::offset::Utc::now().timestamp();
                 let seconds_passed = 0.max(now - job.last_scheduled);
                 if seconds_passed >= capacity.job_checking_interval_seconds as i64 {
-                    debug!("scheduling job for {} to be run", &job.msg);
+                    debug!("scheduling job for {:?} to be run", &job.msg);
                     job.last_scheduled = now;
                     tokio::spawn(do_check(
                         job_clone, slot, ticket,
@@ -201,7 +201,7 @@ async fn schedule_one<InputMsg, OutputMsg, UserError, Context, CheckResult, Acce
                     (JobStatus::Dispatched, sleep_time)
                 } else {
                     // this one is not up for scheduling,
-                    debug!("time for {} has not come yet", &job.msg);
+                    debug!("time for {:?} has not come yet", &job.msg);
 
                     // adjust sleep time to be the smallest
                     let seconds_left = capacity.job_checking_interval_seconds - seconds_passed as u32;
@@ -231,7 +231,7 @@ macro_rules! return_on_failure {
                 // error occurred, try to accept it and mark the job as done,
                 // if there is an error when accepting the failure, leave the job's status unchanged
                 warn!(
-                    "error occurred when checking status for {}, accepting it. error is: {}",
+                    "error occurred when checking status for {:?}, accepting it. error is: {:?}",
                     &msg_for_logging, &user_error
                 );
 
@@ -240,19 +240,19 @@ macro_rules! return_on_failure {
                     match $accept_failure($input_msg.into(), user_error).await {
                         Ok(()) => {
                             // failure accepted, mark the job as done
-                            info!("failure for {} accepted, marking the job to be done", &msg_for_logging);
+                            info!("failure for {:?} accepted, marking the job to be done", &msg_for_logging);
                             write_job.done = true;
                         }
                         Err(accept_failure_user_error) => {
                             // failed to accept failure, leave the done status unchanged
                             warn!(
-                                "failed to accept failure for msg {}, error is {}",
+                                "failed to accept failure for msg {:?}, error is {:?}",
                                 &msg_for_logging, &accept_failure_user_error
                             );
                         }
                     }
                 } else {
-                    warn!("job for {} is already done", &msg_for_logging);
+                    warn!("job for {:?} is already done", &msg_for_logging);
                 }
 
                 // return from the caller
@@ -275,10 +275,10 @@ async fn do_check<InputMsg, OutputMsg, UserError, Context, CheckResult, AcceptFa
     output_queue: Option<&'static str>,
 )
     where
-        InputMsg: Clone + Display + Send + Sync + 'static,
+        InputMsg: Clone + Debug + Send + Sync + 'static,
         Context: From<InputMsg> + Send + 'static,
         OutputMsg: Serialize + Send + 'static,
-        UserError: From<serde_json::Error> + Display + Send + 'static,
+        UserError: From<serde_json::Error> + Debug + Send + 'static,
         CheckResult: Future<Output=Result<Option<OutputMsg>, UserError>> + Send + 'static,
         AcceptFailureResult: Future<Output=Result<(), UserError>> + Send + 'static,
 {
@@ -297,7 +297,7 @@ async fn do_check<InputMsg, OutputMsg, UserError, Context, CheckResult, AcceptFa
     match maybe_output_msg {
         None => {
             // job is still in progress, do nothing
-            debug!("job for {} is still in progress", &msg);
+            debug!("job for {:?} is still in progress", &msg);
             ()
         }
         Some(output_msg) => {

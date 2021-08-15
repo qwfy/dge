@@ -13,6 +13,7 @@ mod double;
 mod duplicate_input;
 mod init_exchanges_and_queues;
 mod multiply;
+mod rest_call;
 mod square;
 
 #[rustfmt::skip]
@@ -22,6 +23,7 @@ enum Command {
     DuplicateInput,
     InitExchangesAndQueues,
     Multiply,
+    RestCall,
     Square,
 }
 
@@ -34,6 +36,7 @@ fn main() -> Result<()> {
         Command::DuplicateInput => duplicate_input::main(),
         Command::InitExchangesAndQueues => init_exchanges_and_queues::main(),
         Command::Multiply => multiply::main(),
+        Command::RestCall => rest_call::main(),
         Command::Square => square::main(),
     }
 }

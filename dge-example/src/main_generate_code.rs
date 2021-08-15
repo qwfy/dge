@@ -37,11 +37,19 @@ fn main() {
         "dge_example::behaviour::multiply".into(),
         13,
     );
+    let rest_call = graph.poll(
+        multiply,
+        "rest_call".into(),
+        "dge_example::behaviour::data::Float",
+        "rest_call",
+        "dge_example::behaviour::rest_call".into(),
+        13,
+    );
 
     let () = graph.terminate(
-        multiply,
+        rest_call,
         "result",
-        "dge_example::behaviour::data::Float",
+        "dge_example::behaviour::data::Integer",
         "terminate",
         1
     );

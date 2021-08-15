@@ -1,5 +1,5 @@
 use std::collections::VecDeque;
-use std::fmt::Display;
+use std::fmt::Debug;
 use std::future::Future;
 use std::hash::Hash;
 use std::sync::Arc;
@@ -34,9 +34,9 @@ pub async fn add_to_jobs<InputMsg>(
     msg: InputMsg,
 ) -> Result<rmq_primitive::Responsibility>
 where
-    InputMsg: Display,
+    InputMsg: Debug,
 {
-    debug!("adding job for msg {} to the job queue", &msg);
+    debug!("adding job for msg {:?} to the job queue", &msg);
     let job = new_job(msg);
     {
         let mut jobs = jobs.write().await;

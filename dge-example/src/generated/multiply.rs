@@ -56,7 +56,7 @@ async fn handler(
         msg = msg,
         aggregate = dge_example::behaviour::multiply::aggregate,
         accept_failure = dge_example::behaviour::accept_failure::accept_failure,
-        output_queue = Some("result"),
+        output_queue = Some("rest_call"),
         exchange = "dge_example_work_exchange",
     )
 }
