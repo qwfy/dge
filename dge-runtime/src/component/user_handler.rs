@@ -15,7 +15,7 @@ macro_rules! user_handler {
                     &$msg, &user_error
                 );
                 let () =
-                    $accept_failure((&$msg).into(), user_error)
+                    $accept_failure($msg.into(), user_error)
                         .await
                         .map_err(|ue| Error::UserError {
                             error: ue.to_string(),
@@ -27,7 +27,7 @@ macro_rules! user_handler {
                     &out_msg,
                     $output_queue,
                     $channel,
-                    (&$msg).into(),
+                    $msg.into(),
                     $accept_failure,
                     $exchange,
                 )

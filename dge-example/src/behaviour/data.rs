@@ -18,14 +18,14 @@ pub enum Context {
     OfFloat(Float),
 }
 
-impl From<&Integer> for Context {
-    fn from(x: &Integer) -> Context {
+impl From<Integer> for Context {
+    fn from(x: Integer) -> Context {
         Context::OfInteger(x.clone())
     }
 }
 
-impl From<&Float> for Context {
-    fn from(x: &Float) -> Context {
+impl From<Float> for Context {
+    fn from(x: Float) -> Context {
         Context::OfFloat(x.clone())
     }
 }

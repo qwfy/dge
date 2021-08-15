@@ -11,7 +11,7 @@ macro_rules! fan_out {
                 // serialization errors are final, accept the failure
                 warn!("failed to serialize message {:?}, accepting failure", &$msg);
                 // failure to accept will be retried
-                let () = $accept_failure((&$msg).into(), serde_error.into())
+                let () = $accept_failure($msg.into(), serde_error.into())
                     .await
                     .map_err(|ue| Error::UserError {
                         error: ue.to_string(),

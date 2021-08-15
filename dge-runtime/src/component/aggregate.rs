@@ -35,7 +35,7 @@ macro_rules! aggregate {
                     &merged_msg,
                     $output_queue,
                     $channel,
-                    (&$msg).into(),
+                    $msg.into(),
                     $accept_failure,
                     $exchange,
                 )
