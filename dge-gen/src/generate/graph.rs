@@ -81,6 +81,19 @@ pub(crate) fn generate<P: AsRef<Path>>(
                 )?;
                 update_outputs(&mut outputs, dir, name, content);
             }
+            Node::Poll {
+                name,
+                behaviour_module,
+            } => {
+                let content = generate_poll(
+                    g,
+                    node_i,
+                    behaviour_module.into(),
+                    graph.accept_failure.clone(),
+                    rmq_options.clone(),
+                )?;
+                update_outputs(&mut outputs, dir, name, content);
+            }
         }
     }
 
@@ -216,6 +229,30 @@ fn generate_user_handler(
     } = expect_one_incoming_edge(g, node_i)?;
     let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
     super::user_handler::generate(
+        input_queue.clone(),
+        output_queue,
+        module,
+        accept_failure,
+        type_input.clone(),
+        rmq_options,
+    )
+}
+
+
+fn generate_poll(
+    g: &PetGraph,
+    node_i: NodeIndex,
+    module: String,
+    accept_failure: String,
+    rmq_options: RmqOptions,
+) -> Result<String> {
+    let Edge {
+        queue: input_queue,
+        msg_type: type_input,
+        retry_interval_in_seconds: _,
+    } = expect_one_incoming_edge(g, node_i)?;
+    let output_queue = expect_optional_outgoing_edge(g, node_i)?.map(|e| e.queue.clone());
+    super::poll::generate(
         input_queue.clone(),
         output_queue,
         module,

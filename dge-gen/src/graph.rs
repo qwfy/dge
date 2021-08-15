@@ -36,6 +36,11 @@ pub(crate) enum Node {
         name: String,
         behaviour_module: String,
     },
+    /// A node that polls the incoming messages.
+    Poll {
+        name: String,
+        behaviour_module: String,
+    },
 }
 
 impl Node {
@@ -46,6 +51,7 @@ impl Node {
             Node::Aggregate { name, .. } => name.clone(),
             Node::FanOut { name, .. } => name.clone(),
             Node::UserHandler { name, .. } => name.clone(),
+            Node::Poll { name, .. } => name.clone(),
         }
     }
 }
@@ -183,6 +189,29 @@ impl Graph {
         );
 
         fan_out_i
+    }
+
+    pub fn poll<S: Into<String>>(
+        &mut self,
+        input: NodeIndex,
+        queue: S,
+        type_input: S,
+        name: S,
+        behaviour_module: S,
+        retry_interval_in_seconds: u32,
+    ) -> NodeIndex {
+        let poll_node = Node::Poll {
+            name: name.into(),
+            behaviour_module: behaviour_module.into(),
+        };
+        let poll_node_i = self.g.add_node(poll_node);
+        let edge = Edge {
+            queue: queue.into(),
+            msg_type: type_input.into(),
+            retry_interval_in_seconds,
+        };
+        self.g.add_edge(input, poll_node_i, edge);
+        poll_node_i
     }
 
     /// Generate code represented by the graph, write the code generated to `output_dir`.

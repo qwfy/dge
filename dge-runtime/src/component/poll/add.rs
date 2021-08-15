@@ -19,20 +19,25 @@ use crate::rmq_primitive;
 
 use super::data::*;
 
+pub fn new_job<InputMsg>(msg: InputMsg) -> Arc<RwLock<Job<InputMsg>>> {
+    Arc::new(RwLock::new(Job {
+        last_scheduled: 0,
+        done: false,
+        ticket: Arc::new(Semaphore::new(1)),
+        msg,
+    }))
+}
+
 pub async fn add_to_jobs<InputMsg>(
     jobs: Jobs<InputMsg>,
+    _channel: lapin::Channel,
     msg: InputMsg,
 ) -> Result<rmq_primitive::Responsibility>
 where
     InputMsg: Display,
 {
     debug!("adding job for msg {} to the job queue", &msg);
-    let job = Arc::new(RwLock::new(Job {
-        last_scheduled: 0,
-        done: false,
-        ticket: Arc::new(Semaphore::new(1)),
-        msg,
-    }));
+    let job = new_job(msg);
     {
         let mut jobs = jobs.write().await;
         // new jobs are added to the tail of the queue to be fair to the old jobs
