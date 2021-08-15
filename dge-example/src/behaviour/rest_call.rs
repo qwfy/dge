@@ -13,6 +13,10 @@ pub async fn init() -> Vec<Float> {
     vec![]
 }
 
+pub async fn save_msg(msg: Float) -> Result<(), Error> {
+    Ok(())
+}
+
 pub fn get_capacity() -> Capacity {
     std::default::Default::default()
 }

@@ -7,7 +7,6 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use dge_runtime::component::poll::Jobs;
 use dge_runtime::component::poll::new_job;
-use dge_runtime::component::poll::add_to_jobs;
 use dge_runtime::component::poll::poll_forever;
 
 #[rustfmt::skip]
@@ -33,7 +32,7 @@ pub(crate) async fn main() -> Result<()> {
     let () = dge_runtime::rmq::consume_forever(
         &rmq_uri,
         {{ input_queue }},
-        add_to_jobs,
+        handler,
         jobs,
         {{ prefetch_count }},
     ).await;
@@ -58,4 +57,19 @@ async fn load_jobs() -> Result<Jobs<{{ type_input }}>> {
     info!("jobs added to the job queue");
 
     Ok(jobs)
+}
+
+
+#[rustfmt::skip]
+async fn handler(
+    jobs: Jobs<{{ type_input }}>,
+    _channel: Channel,
+    msg: {{ type_input }},
+) -> Result<Responsibility>
+{
+    dge_runtime::add_to_jobs!(
+        jobs = jobs,
+        msg = msg,
+        save_msg = {{ behaviour_module }}::save_msg,
+    )
 }

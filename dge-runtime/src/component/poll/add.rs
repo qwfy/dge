@@ -28,21 +28,29 @@ pub fn new_job<InputMsg>(msg: InputMsg) -> Arc<RwLock<Job<InputMsg>>> {
     }))
 }
 
-pub async fn add_to_jobs<InputMsg>(
-    jobs: Jobs<InputMsg>,
-    _channel: lapin::Channel,
-    msg: InputMsg,
-) -> Result<rmq_primitive::Responsibility>
-where
-    InputMsg: Debug,
-{
-    debug!("adding job for msg {:?} to the job queue", &msg);
-    let job = new_job(msg);
-    {
-        let mut jobs = jobs.write().await;
-        // new jobs are added to the tail of the queue to be fair to the old jobs
-        jobs.push_back(job);
+#[macro_export]
+macro_rules! add_to_jobs {
+(
+    jobs=$jobs:expr,
+    msg=$msg:expr,
+    save_msg=$save_msg:path
+    $(,)?
+) => {{
+    debug!("adding job for msg {:?} to the job queue", &$msg);
+    match $save_msg($msg.clone()).await {
+        Err(user_error) => {
+            // this will be retried
+            warn!("failed to save message {:?}, error is: {:?}", &$msg, user_error);
+            Ok(rmq_primitive::Responsibility::Reject)
+        }
+        Ok(()) => {
+            let job = new_job($msg);
+            let mut jobs = $jobs.write().await;
+            // new jobs are added to the tail of the queue to be fair to the old jobs
+            jobs.push_back(job);
+            debug!("job added");
+            Ok(rmq_primitive::Responsibility::Accept)
+        }
     }
-    debug!("job added");
-    Ok(rmq_primitive::Responsibility::Accept)
+}}
 }
