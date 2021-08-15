@@ -8,8 +8,6 @@ use chrono;
 #[rustfmt::skip]
 #[tokio::main]
 pub(crate) async fn main() -> Result<()> {
-    setup_logger();
-
     let rmq_uri = {{ rmq_options.get_rmq_uri }}();
 
     // all queues used in the graph
@@ -30,22 +28,4 @@ pub(crate) async fn main() -> Result<()> {
     info!("all necessary exchanges and queues initialized");
 
     Ok(())
-}
-
-#[rustfmt::skip]
-fn setup_logger() {
-    fern::Dispatch::new()
-        .format(|out, message, record| {
-            out.finish(format_args!(
-                "{} [{}] [{}] {}",
-                chrono::Local::now().format("[%Y-%m-%d] [%H:%M:%S]"),
-                record.target(),
-                record.level(),
-                message
-            ))
-        })
-        .level(log::LevelFilter::Info)
-        .chain(std::io::stdout())
-        .apply()
-        .unwrap();
 }

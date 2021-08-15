@@ -64,6 +64,7 @@ fn main() {
             "",
             true,
             true,
+            "dge_example::behaviour::setup_logger",
         )
         .unwrap()
 }

@@ -29,6 +29,8 @@ enum Command {
 
 #[rustfmt::skip]
 fn main() -> Result<()> {
+    dge_example::behaviour::setup_logger();
+
     let command = Command::from_args();
 
     match command {

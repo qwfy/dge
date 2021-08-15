@@ -18,6 +18,8 @@ enum Command {
 
 #[rustfmt::skip]
 fn main() -> Result<()> {
+    {{ setup_logger }}();
+
     let command = Command::from_args();
 
     match command {

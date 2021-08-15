@@ -12,11 +12,15 @@ struct Command {
 #[template(path = "main.rs", escape = "none")]
 struct MainTemplate {
     commands: Vec<Command>,
+    setup_logger: String,
 }
 
-pub(crate) fn generate(
+pub(crate) fn generate<S: AsRef<str>>(
     modules: Vec<String>,
+    setup_logger: S,
 ) -> Result<String> {
+    let setup_logger = setup_logger.as_ref();
+
     let mut commands = Vec::new();
     for module in modules {
         let variant = &module.to_camel_case();
@@ -27,7 +31,8 @@ pub(crate) fn generate(
     }
 
     let template = MainTemplate {
-        commands
+        commands,
+        setup_logger: String::from(setup_logger),
     };
 
     let generated = template.render()?;
