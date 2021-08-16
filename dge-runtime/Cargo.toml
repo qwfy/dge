@@ -3,8 +3,9 @@ name = "dge-runtime"
 version = "0.1.0"
 authors = ["Incomplete <incomplete@aixon.co>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "Crate for executing distributed computational graph"
+license = "MIT"
+repository = "https://github.com/qwfy/dge"
 
 [dependencies]
 tokio = { version = "1.5", features = ["full"] }
