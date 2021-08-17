@@ -1,14 +1,14 @@
 [package]
 name = "dge-example"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Incomplete <incomplete@aixon.co>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dge-gen = { path = "../dge-gen", version = "0.1.0" }
-dge-runtime = { path = "../dge-runtime", version = "0.1.0" }
+dge-gen = { path = "../dge-gen", version = "0.2.0" }
+dge-runtime = { path = "../dge-runtime", version = "0.2.0" }
 tokio = { version = "1.5", features = ["full"] }
 lapin = "1.7.1"
 log = "0.4"

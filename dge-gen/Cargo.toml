@@ -1,6 +1,6 @@
 [package]
 name = "dge-gen"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Incomplete <incomplete@aixon.co>"]
 edition = "2018"
 description = "Crate for building a computational graph to be executed distributely"

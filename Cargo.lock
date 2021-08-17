@@ -323,7 +323,7 @@ dependencies = [
 
 [[package]]
 name = "dge-example"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "dge-gen",
@@ -340,7 +340,7 @@ dependencies = [
 
 [[package]]
 name = "dge-gen"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "askama",
  "heck",
@@ -351,7 +351,7 @@ dependencies = [
 
 [[package]]
 name = "dge-runtime"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "fern",
