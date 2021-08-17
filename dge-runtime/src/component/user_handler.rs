@@ -9,7 +9,7 @@ macro_rules! user_handler {
     ) => {
         match $user_handler($state, &$msg).await {
             Err(user_error) => {
-                // TODO @incomplete: for now treat user error as final, this should be recosnidered
+                // TODO @incomplete: for now treat user error as final, this should be reconsidered
                 warn!(
                     "failed to process message: {:?}, error is: {}",
                     &$msg, &user_error

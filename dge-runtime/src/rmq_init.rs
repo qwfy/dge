@@ -13,32 +13,32 @@ use crate::rmq_primitive::constant::RMQ_QUEUE_DECLARE_OPTIONS;
 
 /// Create the necessary RabbitMQ exchanges and queues.
 ///
-/// For a message published to `work_queue` of direct exchange `work_direct_exchange`:
+/// For a message published to `work_queue` of direct exchange `work_exchange`:
 ///
 /// - if the consumer of `work_queue` `ack`s it, then this is the end of this message
 /// - if the consumer `reject`ed it, then it will be dead-lettered  to `retry_queue` of
-///   direct exchange `retry_direct_exchange`, after `retry_interval_in_seconds`,
+///   direct exchange `retry_exchange`, after `retry_interval_in_seconds`,
 ///   the message will be delivered to `work_queue` again, the cycle continues
 ///
 /// In short, the user should only be interested in `work_queue`, the `retry_queue` is
 /// is just there to enable retry with configurable delay.
 ///
-/// (`work_direct_exchange`, `work_queue`) and (`retry_direct_exchange`, `retry_queue`)
+/// (`work_exchange`, `work_queue`) and (`retry_exchange`, `retry_queue`)
 /// mutually dead-letters each other, with different ways of triggering it.
 ///
-/// Both `work_direct_exchange` and `retry_direct_exchange` should be direct exchanges,
+/// Both `work_exchange` and `retry_exchange` should be direct exchanges,
 /// the implementation depends on this.
 pub async fn init_work_queue<S: AsRef<str>>(
     rmq_uri: S,
-    work_direct_exchange: S,
+    work_exchange: S,
     work_queue: S,
-    retry_direct_exchange: S,
+    retry_exchange: S,
     retry_queue: S,
     retry_interval_in_seconds: u32,
 ) -> Result<()> {
     let rmq_uri = rmq_uri.as_ref();
-    let work_direct_exchange = work_direct_exchange.as_ref();
-    let retry_direct_exchange = retry_direct_exchange.as_ref();
+    let work_direct_exchange = work_exchange.as_ref();
+    let retry_direct_exchange = retry_exchange.as_ref();
     let work_queue = work_queue.as_ref();
     let retry_queue = retry_queue.as_ref();
 

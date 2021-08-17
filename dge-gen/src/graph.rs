@@ -67,10 +67,10 @@ pub(crate) struct Edge {
     pub(crate) retry_interval_in_seconds: u32,
 }
 
-/// A computational graph where:
+/// A computational graph
 ///
-/// - edges represent messages of static types delivered between nodes via RabbitMQ queue
-/// - nodes represent computations that transform the input message into output message
+/// - edges of the graph represent messages of static types delivered between nodes via RabbitMQ queue
+/// - nodes of the graph represent computations that transform the input message into output message
 pub struct Graph {
     pub(crate) g: PetGraph,
     pub(crate) accept_failure: String,
@@ -90,7 +90,8 @@ impl Graph {
     /// - `Context` is a data type representing the current context,
     ///   this data type is defined by you,
     ///   and should be `From<T>` for all of your messages `T` carried by an edge
-    /// Different edges can carry different type of messages,
+    ///
+    /// Different edges can carry different types of messages,
     /// but they all have to be serializable and deserializable by serde_json,
     /// this serialization requirement is strictly for convenience,
     /// and can be removed if there is enough motivation.
@@ -114,14 +115,16 @@ impl Graph {
 
     /// Read a message of type `type_input` from node `input` via RabbitMQ queue `queue`,
     /// and process it with this node, which is named `name`,
-    /// using behaviour defined by `behaviour_module`,
-    /// retry after `retry_interval_in_seconds` if some error happened during the processing,
+    /// using behaviour defined by `behaviour_module`.
+    /// Retry after `retry_interval_in_seconds` if some error happened during the processing,
     /// (transient or non-transient), and dge decides that the processing should be retried.
     ///
-    /// Return a handle to the `handler` node.
+    /// Internally this will create a new node for executing code defined by `behaviour_module`,
+    /// and a new edge from `input` to node `name` representing the underlying RabbitMQ queue `queue`.
     ///
-    /// Internally this will create a new node for `handler`,
-    /// and a new edge from `input` to `handler` representing the underlying RabbitMQ queue `queue`.
+    /// The arguments can be read as:
+    ///
+    /// `input -- queue carrying message of type_input --> name`
     pub fn process<S: Into<String>>(
         &mut self,
         input: NodeIndex,
@@ -145,12 +148,10 @@ impl Graph {
         handler_node_i
     }
 
-    /// Add a node that aggregate messages from `inputs` that belong to a single run,
+    /// Add a node that aggregates messages from `inputs` that belong to a single run,
     /// and aggregate them for later consumption.
     ///
     /// `behaviour_module` defines how the input messages should be aggregated.
-    ///
-    /// Return a handle to the newly added node.
     pub fn aggregate<S: Into<String>>(
         &mut self,
         inputs: Vec<NodeIndex>,
@@ -182,8 +183,6 @@ impl Graph {
 
     /// Create a node that will copy messages of `input`
     /// to all outgoing edges of the newly created node.
-    ///
-    /// Return a handle to the newly created node
     pub fn fan_out<S: Into<String>>(
         &mut self,
         input: NodeIndex,
@@ -206,13 +205,13 @@ impl Graph {
         fan_out_i
     }
 
-    /// Add a node that polls some external system using the input message as arguments.
+    /// Add a node that polls some external system using the input message as the argument.
     ///
     /// `behaviour_module` defines the function that will perform the polling,
     /// this nodes provides scheduling for the actual polling function.
     ///
-    /// For example this can be used to query an third-party service for the availability
-    /// of resource corresponding the input messages.
+    /// For example this can be used to query an third-party REST service for the availability
+    /// of the resources corresponding the input messages.
     pub fn poll<S: Into<String>>(
         &mut self,
         input: NodeIndex,
@@ -236,7 +235,7 @@ impl Graph {
         poll_node_i
     }
 
-    /// An no-op node that terminates the computation.
+    /// A no-op node that terminates the computation.
     pub fn terminate<S: Into<String>>(&mut self, input: NodeIndex, queue: S, type_input: S, name: S, retry_interval_in_seconds: u32) -> () {
         let terminate_node = self.g.add_node(Node::Terminate { name: name.into() });
         self.g.add_edge(input, terminate_node, Edge {
@@ -255,7 +254,7 @@ impl Graph {
     ///   for every edge in the graph, there will be a queue bound to `work_exchange`
     ///   to deliver the message, and a retry queue bound to `retry_exchange` to handle the retry,
     ///   (the retry is backed by RabbitMQ's dead lettering mechanism)
-    /// - if the `init_input_queue` is true, then queues originated from starts node
+    /// - if the `init_input_queue` is true, then queues originated from start nodes
     ///   are also declared by the `init-exchanges-and-queues` subcommand.
     /// - `init_output_queue` controls the initialization of queues leading to termination nodes
     /// - `main_init` is a function that will be run prior to the start of the computation,
