@@ -31,11 +31,11 @@ pub(crate) fn generate<P: AsRef<Path>, S: AsRef<str>>(
     rmq_options: RmqOptions,
     init_input_queue: bool,
     init_output_queue: bool,
-    setup_logger: S,
+    main_init: S,
 ) -> Result<()> {
     let g = &graph.g;
     let dir = dir.as_ref();
-    let setup_logger = setup_logger.as_ref();
+    let main_init = main_init.as_ref();
 
     let mut outputs = HashMap::new();
 
@@ -110,7 +110,7 @@ pub(crate) fn generate<P: AsRef<Path>, S: AsRef<str>>(
     )?;
     update_outputs(&mut outputs, dir, "init_exchanges_and_queues", content);
 
-    let content = generate_main(&outputs, setup_logger)?;
+    let content = generate_main(&outputs, main_init)?;
     update_outputs(&mut outputs, dir, "main", content);
 
     // write the graph in dot format
@@ -389,8 +389,8 @@ fn generate_init_exchanges_and_queues(graph: &PetGraph, rmq_options: RmqOptions,
     super::init_exchanges_and_queues::generate(rmq_options, wanted_queues)
 }
 
-fn generate_main<S: AsRef<str>>(outputs: &HashMap<PathBuf, String>, setup_logger: S) -> Result<String> {
-    let setup_logger = setup_logger.as_ref();
+fn generate_main<S: AsRef<str>>(outputs: &HashMap<PathBuf, String>, main_init: S) -> Result<String> {
+    let main_init = main_init.as_ref();
     let mut modules = Vec::new();
     for file_path in outputs.keys() {
         let file_stem = file_path
@@ -408,5 +408,5 @@ fn generate_main<S: AsRef<str>>(outputs: &HashMap<PathBuf, String>, setup_logger
 
     modules.sort();
 
-    super::main::generate(modules, setup_logger)
+    super::main::generate(modules, main_init)
 }
